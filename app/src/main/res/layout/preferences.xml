@@ -19,18 +19,50 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <TextView
+        <ImageView
+            android:id="@+id/pref_prof_pic"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:src="@drawable/default_profile"
+            android:scaleType="fitXY"
+            />
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="22dp"
-            android:text="You are signed in"
-            android:layout_centerVertical="true"
-            />
+            android:layout_toRightOf="@id/pref_prof_pic"
+            android:orientation="vertical"
+            android:paddingLeft="10dp"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18dp"
+                android:text="Signed in as:"
+                android:layout_toRightOf="@id/pref_prof_pic"
+                android:layout_alignParentTop="true"
+                />
+            <TextView
+                android:id="@+id/pref_full_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18dp"
+                android:text="NAME"
+                />
+
+            <TextView
+                android:id="@+id/pref_char_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18dp"
+                android:text="CHARACTER NAME"
+                />
+        </LinearLayout>
         <Button
             android:id="@+id/sign_out_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
             android:textSize="22dp"
             android:text="Sign Out"
             android:onClick="onSignOutClick"
