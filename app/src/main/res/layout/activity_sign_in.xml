@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/sign_in_clear"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_alignParentRight="true"
+        android:clickable="true"
+        android:text="Clear"
+        android:textSize="18dp"
+        android:onClick="signInOnClearClick"
+        >
+    </Button>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Character name"
+            android:textSize="24dp"
+            android:gravity="center_horizontal"
+            />
+
+        <EditText
+            android:id="@+id/sign_in_character"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24dp"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24dp"
+            android:text="Password"
+            android:gravity="center_horizontal"
+            />
+
+        <EditText
+            android:id="@+id/sign_in_password"
+            android:inputType="textPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="24dp"
+            />
+
+        <Button
+            android:id="@+id/sign_in_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Sign in"
+            android:textSize="18dp"
+            android:clickable="true"
+            android:onClick="onSignInCLick"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:clickable="true"
+            android:textSize="22dp"
+            android:text="Create an account"
+            android:gravity="center"
+            android:onClick="onCreateClick"
+            />
+
+
+    </LinearLayout>
+
+
+
+</RelativeLayout>

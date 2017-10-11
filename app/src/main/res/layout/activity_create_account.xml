@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CreateAcctActivity">
+
+    <!-- makes the whole application scrollable-->
+    <ScrollView
+
+        android:id="@+id/profile_fill"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+    <!--Enclose all content in a vertipreferencesyout-->
+        <LinearLayout
+            android:id="@+id/profile_fill_linear"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="4">
+                <!-- use a weighted sum to arrange buttons at top-->
+                <!--Will implement functionality at later date-->
+
+                <Button
+                    android:id="@+id/Tag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:clickable="false"
+                    android:text="Tag" />
+
+                <Button
+                    android:id="@+id/History"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toRightOf="@id/Tag"
+                    android:layout_weight="1"
+                    android:clickable="false"
+                    android:text="History" />
+
+                <Button
+                    android:id="@+id/Score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toLeftOf="@id/Settings"
+                    android:layout_weight="1"
+                    android:clickable="false"
+                    android:text="Score" />
+
+                <Button
+                    android:id="@+id/Settings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_weight="1"
+                    android:clickable="false"
+                    android:text="Settings" />
+
+            </LinearLayout>
+
+            <!--This button will switch between "Clear" and "I already have an account"-->
+            <Button
+                android:id="@+id/account_clear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:clickable="true"
+                android:onClick="onAccClearClick"
+                android:text="I already have an account" />
+
+            <!--Declares a maximum length of one line-->
+            <EditText
+                android:id="@+id/full_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Full name (private)"
+                android:maxLines="1"
+                android:singleLine="true" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <EditText
+                    android:id="@+id/char_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Character name"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    />
+
+                <TextView
+                    android:id="@+id/available"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:textColor="#ff0000"
+                    android:text="Not available"
+                    android:textSize="20dp"
+                    android:paddingRight="10dp"
+                    />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <!--The inputType turns letters into dots-->
+                <EditText
+                    android:id="@+id/passwd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:hint="Password"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:singleLine="true" />
+
+                <!--Color and text will change based on if there's a match-->
+                <Button
+                    android:id="@+id/confirm_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:layout_weight="1"
+                    android:onClick="onConfirmClick"
+                    android:text="Not confirmed"
+                    android:textColor="#ff0000"
+                    />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/app_prof_pic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Click to add a profile picture"
+                android:textSize="18dp" />
+
+
+            <!--Start with default and replace with individual pic-->
+            <!--Use fitXY to maintain size constancy within pics-->
+            <ImageView
+                android:id="@+id/profilePic"
+                android:layout_width="225dp"
+                android:layout_height="225dp"
+                android:layout_gravity="center_horizontal"
+                android:onClick="onPhotoClick"
+                android:scaleType="fitXY"
+                android:src="@drawable/default_profile" />
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:alpha="1"
+                android:clickable="false"
+                android:onClick="onSaveClick"
+                android:text="Save" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</android.support.constraint.ConstraintLayout>

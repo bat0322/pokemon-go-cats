@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">profile_fill</string>
+    <string name="tab_1">test1</string>
+    <string name="tab_2">test2</string>
+    <string name="tab_3">test3</string>
+    <string name="tab_4">test4</string>
 </resources>
