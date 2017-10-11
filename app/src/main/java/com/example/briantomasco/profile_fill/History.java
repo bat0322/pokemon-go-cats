@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 
 /**
  * Created by briantomasco on 10/10/17.
+ * History Fragment for tab layout
+ * Functionality will be added in a later lab
  */
 
 public class History extends Fragment {

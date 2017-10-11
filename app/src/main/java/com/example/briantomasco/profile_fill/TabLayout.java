@@ -1,5 +1,10 @@
 package com.example.briantomasco.profile_fill;
 
+/**
+ * Created by briantomasco on 10/10/17.
+ * Borrowed from in-class tab layout example.
+ */
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v4.app.Fragment;

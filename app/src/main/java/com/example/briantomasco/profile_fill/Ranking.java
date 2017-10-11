@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 
 /**
  * Created by briantomasco on 10/9/17.
+ * Ranking Fragment for tab layout
+ * Functionality will be added in a later lab
  */
 
 public class Ranking extends Fragment {

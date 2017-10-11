@@ -258,7 +258,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                     RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
                     String url = NAME_SERVER_ADDRESS + "?name=" + cn.getText();
 
-                    // send request for name availabilty
+                    // create request for name availabilty
                     JsonObjectRequest jsObjReq = new JsonObjectRequest(
                         Request.Method.GET,
                         url,
@@ -282,6 +282,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                                 }
                             }
                         },
+                        // tell user if connection failed
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
@@ -289,14 +290,15 @@ public class CreateAcctActivity extends AppCompatActivity {
                             }
                         }
                     ) {
+                        // change http header, borrowed from example code
                         @Override
                         public Map<String, String> getHeaders() throws AuthFailureError {
                             Map<String, String> params = new HashMap<String, String>();
-                            // otherwise causes status 500 server error
                             params.put("Accept", "application/json");
                             return params;
                         }
                     };
+                    //add request to Volley queue for execution
                     queue.add(jsObjReq);
                 }
             }
@@ -381,6 +383,7 @@ public class CreateAcctActivity extends AppCompatActivity {
 
             accClear.setText("I already have an account");
         }
+        // if already have account button is clicked, go to sign in screen
         else if (accClear.getText().equals("I already have an account")){
             Intent alreadyHave = new Intent("SIGN");
             startActivity(alreadyHave);
@@ -398,7 +401,56 @@ public class CreateAcctActivity extends AppCompatActivity {
 
     protected void onSaveClick(View v){
 
-        //Check to make sure all required fields are full and there is a match
+
+        // check availability again in case someone took your username while you were finishing creating it
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url = NAME_SERVER_ADDRESS + "?name=" + cn.getText();
+
+        // create request for name availabilty
+        JsonObjectRequest jsObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+
+                            // change text according to availability
+                            avail = Boolean.parseBoolean(response.getString("avail"));
+                            Log.d("JSON", "avail");
+                            if (!avail) {
+                                available.setTextColor(Color.RED);
+                                available.setText("Not available");
+                            } else {
+                                available.setTextColor(Color.GREEN);
+                                available.setText("Available");
+                            }
+                        } catch (Exception e) {
+                            Log.d("JSON AVAIL", e.getMessage());
+                        }
+                    }
+                },
+                // tell user if connection failed
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(), "Network connection error: could not check availability", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        ) {
+            // change http header, borrowed from example code
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Accept", "application/json");
+                return params;
+            }
+        };
+        // add request to Volley queue for execution
+        queue.add(jsObjReq);
+
+        // check to make sure all required fields are full and there is a match
         if (fnEmpty) {
             Toast.makeText(this, "Please enter a valid full name", Toast.LENGTH_SHORT).show();
         }
@@ -415,9 +467,9 @@ public class CreateAcctActivity extends AppCompatActivity {
             startActivityForResult(pswdIntent, CONFIRM);
         }
         else if (!avail) {
-            Toast.makeText(this, "Please enter a valid username", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please enter an available username", Toast.LENGTH_SHORT).show();
         }
-        //if inputs are valid, save data in a shared preference
+        // if inputs are valid, save data in a shared preference
         else {
             SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
             final SharedPreferences.Editor editor = save.edit();
@@ -446,22 +498,30 @@ public class CreateAcctActivity extends AppCompatActivity {
                 path = directory.getAbsolutePath();
                 editor.putString("filePath", path);
             }
+            // save booleans to keep track of different UI states
             editor.putBoolean("Match", match);
             editor.putBoolean("Avail", avail);
+            // save boolean saying a profile is logged in
             editor.putBoolean("Logged In", true);
+
+            // tell user save data is being uploaded to the server
             Toast.makeText(this, "Data is being uploaded", Toast.LENGTH_SHORT).show();
 
-            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-            String url = PROFILE_SERVER_ADDRESS;
-            Log.d("URL", url);
+            // set up Volley for data save
+            //RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            url = PROFILE_SERVER_ADDRESS;
+
             try {
+                // create a JSON object and put input data in
                 JSONObject profile = new JSONObject();
                 profile.put("name", cn.getText());
                 profile.put("password", pw.getText());
                 profile.put("full_name", fn.getText());
-                if (bitmap != null) profile.put("image_path", path);
-                Log.d("JSON OBJ", "put");
 
+                // will not work for signing in on different devices, will handle in later lab
+                if (bitmap != null) profile.put("image_path", path);
+
+                // create a post request with newly created JSON object
                 JsonObjectRequest jsonObjReq = new JsonObjectRequest(
                     url,
                     profile,
@@ -469,28 +529,36 @@ public class CreateAcctActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(JSONObject response) {
                             try {
+                                // if the save was successful, commit the local save data and tell user
                                 if (response.get("status").equals("OK")) {
                                     editor.commit();
                                     Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_SHORT).show();
+
+                                    // once saved, go to tab layout
                                     Intent saved = new Intent ("TAB");
                                     startActivity(saved);
                                 }
+
+                                // if not, tell the user there was an issue
                                 else
-                                    Toast.makeText(getApplicationContext(), "Error while saving", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), "Error while saving " + response.toString(), Toast.LENGTH_SHORT).show();
                             } catch (Exception e) {
-                                Toast.makeText(getApplicationContext(), "Error while saving", Toast.LENGTH_SHORT).show();
-                                Log.d("SAVE ERROR", response.toString());
+                                Toast.makeText(getApplicationContext(), "Error while saving " + e.getMessage(), Toast.LENGTH_SHORT).show();
+
                             }
                         }
                     },
+
+                    // tell the user if there was an issue saving
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
-                            Toast.makeText(getApplicationContext(), "Error while saving", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Error while saving " + error.getMessage(), Toast.LENGTH_SHORT).show();
                             Log.d("SAVE ERROR", error.toString());
                         }
                     }
                 ) {
+                    // change http headers, borrowed from example code
                     @Override
                     public Map<String, String> getHeaders() throws AuthFailureError {
                         Map<String, String> params = new HashMap<String, String>();
@@ -498,9 +566,12 @@ public class CreateAcctActivity extends AppCompatActivity {
                         return params;
                     }
                 };
+                // add post request to Volley queue to be executed
                 queue.add(jsonObjReq);
             }
+            // tell user if there is an issue making JSON object
             catch (Exception e){
+                Toast.makeText(getApplicationContext(), "JSON object invalid " + e.getMessage(), Toast.LENGTH_SHORT);
                 Log.d("JSON SAVE ERROR", e.getMessage());
             }
 
@@ -508,26 +579,32 @@ public class CreateAcctActivity extends AppCompatActivity {
         }
     }
 
+    // save match, avail, and newly taken profile pic for orientation change
     @Override
     protected void onSaveInstanceState(Bundle outState){
         outState.putBoolean("match", match);
-        if (profilePicUri == null) Log.d("PPU", "null");
+        outState.putBoolean("avail", avail);
         if (profilePicUri != null) outState.putString("uri", profilePicUri.toString());
-        Log.d("SAVE", String.valueOf(match));
         super.onSaveInstanceState(outState);
     }
 
+    // restore booleans and profile pic from edited create account
     @Override
     protected void onRestoreInstanceState(Bundle inState){
         super.onRestoreInstanceState(inState);
         match = inState.getBoolean("match");
+        avail = inState.getBoolean("avail");
         if (inState.containsKey("uri")) profilePicUri =Uri.parse(inState.getString("uri"));
-        if (profilePicUri == null) Log.d("PPU", "null");
         Log.d("RESTORE", String.valueOf(match));
 
         if (match){
             confirmButton.setTextColor(Color.GREEN);
             confirmButton.setText("Confirmed");
+        }
+
+        if (avail){
+            available.setTextColor(Color.GREEN);
+            available.setText("Available");
         }
 
         if(profilePicUri != null){
