@@ -59,12 +59,57 @@ public class TabLayout extends AppCompatActivity {
         slidingTabLayout.setViewPager(mViewPager);
 
     }
+
+    // when sign out is clicked, clear local data and return to sign in activity
     protected void onSignOutClick(View v){
         SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
         load.edit().clear().commit();
         Intent signOut = new Intent("SIGN");
         startActivity(signOut);
         Toast.makeText(getApplicationContext(), "You have signed out", Toast.LENGTH_SHORT).show();
+    }
+
+    // on clicking switches, save current state to local data
+    protected void onSoundClick(View v){
+
+        // get the previous stored setting
+        SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
+        boolean prevSound = load.getBoolean("Sound", false);
+
+        // save the opposite of the previous setting
+        load.edit().putBoolean("Sound", !prevSound).commit();
+
+        // tell user new setting
+        if (!prevSound) Toast.makeText(getApplicationContext(), "Sound turned on", Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getApplicationContext(), "Sound turned off", Toast.LENGTH_SHORT).show();
+    }
+
+    protected void onVibrateClick(View v){
+
+        // get the previous stored setting
+        SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
+        boolean prevVibrate = load.getBoolean("Vibrate", false);
+
+        // save the opposite of the previous setting
+        load.edit().putBoolean("Vibrate", !prevVibrate).commit();
+
+        // tell user new setting
+        if (!prevVibrate) Toast.makeText(getApplicationContext(), "Vibrate turned on", Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getApplicationContext(), "Vibrate turned off", Toast.LENGTH_SHORT).show();
+    }
+
+    protected void onPublicClick(View v){
+
+        // get the previous stored setting
+        SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
+        boolean prevPublic = load.getBoolean("Public", false);
+
+        // save the opposite of the previous setting
+        load.edit().putBoolean("Public", !prevPublic).commit();
+
+        // tell user new setting
+        if (!prevPublic) Toast.makeText(getApplicationContext(), "Public score turned on", Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getApplicationContext(), "Public score turned off", Toast.LENGTH_SHORT).show();
     }
 
 }

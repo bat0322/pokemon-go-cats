@@ -81,6 +81,7 @@
         android:text="Sound"
         android:clickable="true"
         android:textSize="22dp"
+        android:onClick="onSoundClick"
         />
 
     <Switch
@@ -89,12 +90,15 @@
         android:text="Vibrate"
         android:clickable="true"
         android:textSize="22dp"
+        android:onClick="onVibrateClick"
         />
 
     <Switch
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Make score public"
-        android:textSize="22dp"/>
+        android:textSize="22dp"
+        android:onClick="onPublicClick"
+        />
 
 </LinearLayout>

@@ -501,8 +501,15 @@ public class CreateAcctActivity extends AppCompatActivity {
             // save booleans to keep track of different UI states
             editor.putBoolean("Match", match);
             editor.putBoolean("Avail", avail);
+
             // save boolean saying a profile is logged in
             editor.putBoolean("Logged In", true);
+
+            // save default booleans for Settings
+            editor.putBoolean("Sound", false);
+            editor.putBoolean("Vibrate", false);
+            editor.putBoolean("Public", false);
+
 
             // tell user save data is being uploaded to the server
             Toast.makeText(this, "Data is being uploaded", Toast.LENGTH_SHORT).show();
