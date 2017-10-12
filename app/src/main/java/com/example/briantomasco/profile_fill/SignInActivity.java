@@ -9,6 +9,7 @@ import android.widget.EditText;
 
 /**
  * Created by briantomasco on 10/4/17.
+ *
  */
 
 public class SignInActivity extends AppCompatActivity {
@@ -41,12 +42,6 @@ public class SignInActivity extends AppCompatActivity {
         cn.setText("");
         pw.setText("");
 
-    }
-
-    // sign in functionality to be added later, for now just go to tab layout on click
-    protected void onSignInCLick(View v) {
-        Intent signInIntent = new Intent("TAB");
-        startActivity(signInIntent);
     }
 
     //  if create an account is clicked, go to the create account activity
