@@ -367,6 +367,7 @@ public class CreateAcctActivity extends AppCompatActivity {
             cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, profilePicUri);
             cameraIntent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION); //grant permission!
 
+
             //make final image request
             if (cameraIntent.resolveActivity(getPackageManager()) != null) {
                 startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
