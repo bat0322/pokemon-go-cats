@@ -7,8 +7,6 @@ package com.example.briantomasco.profile_fill;
  * Saves entered data to server and signs user in
  */
 
-// TESTING TESTING
-
 import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;

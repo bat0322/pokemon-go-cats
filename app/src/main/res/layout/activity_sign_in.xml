@@ -61,8 +61,7 @@
             android:layout_gravity="center_horizontal"
             android:text="Sign in"
             android:textSize="18dp"
-            android:clickable="true"
-            android:onClick="onSignInCLick"
+            android:clickable="false"
             />
 
         <TextView
