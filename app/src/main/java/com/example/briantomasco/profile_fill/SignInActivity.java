@@ -2,10 +2,26 @@ package com.example.briantomasco.profile_fill;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by briantomasco on 10/4/17.
@@ -17,6 +33,10 @@ public class SignInActivity extends AppCompatActivity {
     // EditTexts for entering character name and password
     EditText cn = null;
     EditText pw = null;
+
+    // server address for sign in and cat list
+    final String PROFILE_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/profile.pl";
+
 
 
     @Override
@@ -35,6 +55,55 @@ public class SignInActivity extends AppCompatActivity {
                 startActivity(goToTab);
             }
         }
+    }
+
+    // sign in to account with given credentials
+    protected void onSignInClick(View v){
+
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url = PROFILE_SERVER_ADDRESS + "?name=" + cn.getText() + "&password=" + pw.getText();
+
+        JsonObjectRequest jsObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            if (response.has("error")) {
+                                Toast.makeText(getApplicationContext(),
+                                        response.get("error").toString(),
+                                        Toast.LENGTH_SHORT).show();
+                            } else {
+                                Intent signIn = new Intent("TAB");
+                                startActivity(signIn);
+                            }
+                        } catch (Exception e) {
+                            Log.d("JSON AVAIL", e.getMessage());
+                        }
+                    }
+                },
+                // tell user if connection failed
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(),
+                                "Could not sign in, error connecting to server: " + error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+        ) {
+            // change http header, borrowed from example code
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Accept", "application/json");
+                return params;
+            }
+        };
+        //add request to Volley queue for execution
+        queue.add(jsObjReq);
     }
 
     // clear EditTexts if clear is clicked

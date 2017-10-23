@@ -36,6 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="24dp"
+            android:maxLines="1"
             />
 
         <TextView
@@ -52,6 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="24dp"
+            android:maxLines="1"
             />
 
         <Button
@@ -61,7 +63,8 @@
             android:layout_gravity="center_horizontal"
             android:text="Sign in"
             android:textSize="18dp"
-            android:clickable="false"
+            android:clickable="true"
+            android:onClick="onSignInClick"
             />
 
         <TextView
