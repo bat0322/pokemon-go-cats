@@ -15,7 +15,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f40bdb86-74bc-474f-8828-a8bca7bdefd4" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/src/main/java/com/example/briantomasco/profile_fill/CreateAcctActivity.java" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/briantomasco/profile_fill/CreateAcctActivity.java" />
     </list>
@@ -57,9 +56,17 @@
       <file leaf-file-name="CreateAcctActivity.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/example/briantomasco/profile_fill/CreateAcctActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="468" column="5" lean-forward="false" selection-start-line="464" selection-start-column="4" selection-end-line="468" selection-end-column="5" />
-              <folding />
+            <state relative-caret-position="165">
+              <caret line="55" column="21" lean-forward="true" selection-start-line="55" selection-start-column="21" selection-end-line="55" selection-end-column="21" />
+              <folding>
+                <element signature="e#5808#6332#0" expanded="true" />
+                <element signature="e#6331#6332#0" expanded="true" />
+                <element signature="e#9589#13114#0" expanded="true" />
+                <element signature="e#12786#12802#0" expanded="true" />
+                <element signature="e#13113#13114#0" expanded="true" />
+                <element signature="e#24139#24155#0" expanded="true" />
+                <element signature="e#30759#30775#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -2154,7 +2161,7 @@
       <option name="DEEP_LINK" value="" />
       <option name="ACTIVITY_CLASS" value="" />
       <method>
-        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1508791748603" />
+        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1508791871726" />
       </method>
     </configuration>
     <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests">
@@ -2201,7 +2208,7 @@
         <option name="ADVANCED_PROFILING_ENABLED" value="false" />
       </Profilers>
       <method>
-        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1508791748603" />
+        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1508791871726" />
       </method>
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
@@ -2362,7 +2369,7 @@
       <option name="DEEP_LINK" value="" />
       <option name="ACTIVITY_CLASS" value="" />
       <method>
-        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1508791748605" />
+        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1508791871728" />
       </method>
     </configuration>
     <list size="1">
@@ -2443,11 +2450,19 @@
       <option name="project" value="LOCAL" />
       <updated>1507766600978</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Testing VCS connection">
+      <created>1508791778138</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1508791778138</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1280" height="800" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="Android Profiler" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3280507" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -2464,7 +2479,7 @@
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="12" side_tool="true" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2358643" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2358643" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Device File Explorer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3296328" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
@@ -2535,7 +2550,8 @@
     <MESSAGE value="Lab 2&#10;&#10;Added functionality for loading locally saved data if a user is logged in and displaying info on preferences profile layout." />
     <MESSAGE value="Lab 2&#10;&#10;Added functionality for locally saving settings. No actual effect on phone yet." />
     <MESSAGE value="Lab 2&#10;&#10;Made availability check before saving. onSaveClick checks availability, if character name is available, doSave is called, otherwise tell user to enter a new one.&#10;&#10;Requested permissions from user, handled permissions accordingly.&#10;&#10;Fixed bug with password popup when clicking outside of box.&#10;&#10;Removed Sign In button click intent. Only way to access an account is to create it.&#10;&#10;Added Toasts in various places to keep user informed on ongoing processes." />
-    <option name="LAST_COMMIT_MESSAGE" value="Lab 2&#10;&#10;Made availability check before saving. onSaveClick checks availability, if character name is available, doSave is called, otherwise tell user to enter a new one.&#10;&#10;Requested permissions from user, handled permissions accordingly.&#10;&#10;Fixed bug with password popup when clicking outside of box.&#10;&#10;Removed Sign In button click intent. Only way to access an account is to create it.&#10;&#10;Added Toasts in various places to keep user informed on ongoing processes." />
+    <MESSAGE value="Testing VCS connection" />
+    <option name="LAST_COMMIT_MESSAGE" value="Testing VCS connection" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -2556,7 +2572,15 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2985">
           <caret line="199" column="21" lean-forward="true" selection-start-line="199" selection-start-column="21" selection-end-line="199" selection-end-column="21" />
-          <folding />
+          <folding>
+            <element signature="e#5808#6332#0" expanded="true" />
+            <element signature="e#6331#6332#0" expanded="true" />
+            <element signature="e#9589#13114#0" expanded="true" />
+            <element signature="e#12786#12802#0" expanded="true" />
+            <element signature="e#13113#13114#0" expanded="true" />
+            <element signature="e#24139#24155#0" expanded="true" />
+            <element signature="e#30759#30775#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2637,7 +2661,15 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="360">
           <caret line="24" column="20" lean-forward="true" selection-start-line="24" selection-start-column="20" selection-end-line="24" selection-end-column="20" />
-          <folding />
+          <folding>
+            <element signature="e#5808#6332#0" expanded="true" />
+            <element signature="e#6331#6332#0" expanded="true" />
+            <element signature="e#9589#13114#0" expanded="true" />
+            <element signature="e#12786#12802#0" expanded="true" />
+            <element signature="e#13113#13114#0" expanded="true" />
+            <element signature="e#24139#24155#0" expanded="true" />
+            <element signature="e#30759#30775#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2668,7 +2700,15 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
           <caret line="21" column="67" lean-forward="true" selection-start-line="21" selection-start-column="67" selection-end-line="21" selection-end-column="67" />
-          <folding />
+          <folding>
+            <element signature="e#5808#6332#0" expanded="true" />
+            <element signature="e#6331#6332#0" expanded="true" />
+            <element signature="e#9589#13114#0" expanded="true" />
+            <element signature="e#12786#12802#0" expanded="true" />
+            <element signature="e#13113#13114#0" expanded="true" />
+            <element signature="e#24139#24155#0" expanded="true" />
+            <element signature="e#30759#30775#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2932,9 +2972,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/example/briantomasco/profile_fill/CreateAcctActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="468" column="5" lean-forward="false" selection-start-line="464" selection-start-column="4" selection-end-line="468" selection-end-column="5" />
-          <folding />
+        <state relative-caret-position="165">
+          <caret line="55" column="21" lean-forward="true" selection-start-line="55" selection-start-column="21" selection-end-line="55" selection-end-column="21" />
+          <folding>
+            <element signature="e#5808#6332#0" expanded="true" />
+            <element signature="e#6331#6332#0" expanded="true" />
+            <element signature="e#9589#13114#0" expanded="true" />
+            <element signature="e#12786#12802#0" expanded="true" />
+            <element signature="e#13113#13114#0" expanded="true" />
+            <element signature="e#24139#24155#0" expanded="true" />
+            <element signature="e#30759#30775#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
