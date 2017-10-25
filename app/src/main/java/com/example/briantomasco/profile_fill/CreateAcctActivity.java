@@ -185,8 +185,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                 match = false;
                 confirmButton.setText("Not Confirmed"); //button telling the user if pw has been confirmed
                 confirmButton.setTextColor(Color.RED);
-                if (pw.getText().toString().equals("")) pwEmpty = true;
-                else pwEmpty = false;
+                pwEmpty = pw.getText().toString().equals("");
 
                 //if every field is empty, top button should read: "I already have an account."
                 if (pwEmpty && fnEmpty && cnEmpty && bitmap == null) {
@@ -215,8 +214,7 @@ public class CreateAcctActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
                 accClear.setText("Clear");
                 accClear.setClickable(true);
-                if (fn.getText().toString().equals("")) fnEmpty = true;
-                else fnEmpty = false;
+                fnEmpty = fn.getText().toString().equals("");
 
                 if (pwEmpty && fnEmpty && cnEmpty && bitmap == null) {
                     accClear.setText("I already have an account");
@@ -242,8 +240,7 @@ public class CreateAcctActivity extends AppCompatActivity {
             public void afterTextChanged(Editable editable) {
                 accClear.setText("Clear");
                 accClear.setClickable(true);
-                if (cn.getText().toString().equals("")) cnEmpty = true;
-                else cnEmpty = false;
+                cnEmpty = cn.getText().toString().equals("");
 
                 if (pwEmpty && fnEmpty && cnEmpty && profilePicUri == null) {
                     accClear.setText("I already have an account");

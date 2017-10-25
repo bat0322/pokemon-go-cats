@@ -1,7 +1,10 @@
 package com.example.briantomasco.profile_fill;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -20,8 +23,14 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.example.briantomasco.profile_fill.CreateAcctActivity.SHARED_PREF;
 
 /**
  * Created by briantomasco on 10/4/17.
@@ -47,7 +56,7 @@ public class SignInActivity extends AppCompatActivity {
         pw = findViewById(R.id.sign_in_password);
 
         // check if a user is already logged in
-        SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
+        SharedPreferences load = getSharedPreferences(SHARED_PREF, 0);
         if (load.contains("Logged In")) {
             // if so, go directly to tab layout
             if (load.getBoolean("Logged In", false)) {
@@ -59,6 +68,10 @@ public class SignInActivity extends AppCompatActivity {
 
     // sign in to account with given credentials
     protected void onSignInClick(View v){
+
+        Toast.makeText(getApplicationContext(),
+                "Validating...",
+                Toast.LENGTH_SHORT).show();
 
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url = PROFILE_SERVER_ADDRESS + "?name=" + cn.getText() + "&password=" + pw.getText();
@@ -76,6 +89,29 @@ public class SignInActivity extends AppCompatActivity {
                                         response.get("error").toString(),
                                         Toast.LENGTH_SHORT).show();
                             } else {
+                                String char_name = response.getString("name");
+                                String pass = response.getString("password");
+                                String full_name = response.getString("full_name");
+
+                                SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+                                final SharedPreferences.Editor editor = save.edit();
+
+
+                                editor.putString("Full Name", full_name);
+                                editor.putString("User Name", char_name);
+                                editor.putString("Password", pass);
+
+
+                                // save boolean saying a profile is logged in
+                                editor.putBoolean("Logged In", true);
+
+                                // save default booleans for Settings
+                                editor.putBoolean("Sound", false);
+                                editor.putBoolean("Vibrate", false);
+                                editor.putBoolean("Public", false);
+
+                                editor.commit();
+
                                 Intent signIn = new Intent("TAB");
                                 startActivity(signIn);
                             }

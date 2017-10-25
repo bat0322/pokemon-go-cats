@@ -103,4 +103,9 @@ public class TabLayout extends AppCompatActivity {
         else Toast.makeText(getApplicationContext(), "Public score turned off", Toast.LENGTH_SHORT).show();
     }
 
+    protected void onPlayClick(View v) {
+        Intent play = new Intent("GAME");
+        startActivity(play);
+    }
+
 }

@@ -41,10 +41,10 @@ public class TabViewPagerAdapter extends FragmentPagerAdapter {
             case 1:
                 return "Ranking";
             case 2:
-                return "History";
+                return "Play";
 
             case 3:
-                return "Play";
+                return "History";
             default:
                 break;
         }

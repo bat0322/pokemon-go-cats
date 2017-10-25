@@ -4,12 +4,26 @@ android:layout_width="match_parent"
 android:layout_height="match_parent"
 android:orientation="vertical" >
 
-<ImageView
-    android:id="@+id/imageViewOfGirl"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="horizontal"
-    android:src="@drawable/default_profile" />
+    <ImageView
+        android:id="@+id/imageViewOfGirl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:scaleType="centerCrop"
+        android:src="@drawable/banner" />
+
+    <TextView
+        android:id="@+id/play_char_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="30dp"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Play"
+        android:onClick="onPlayClick"
+        android:clickable="true"/>
 
     <!--android:contentDescription="@string/ui_cs_picture"-->
 
