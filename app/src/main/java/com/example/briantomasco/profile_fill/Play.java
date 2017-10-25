@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,12 +30,22 @@ public class Play extends Fragment {
 
         // once the view has been created, update the text views and profile picture to match current user
         TextView cn = view.findViewById(R.id.play_char_name);
+        TextView status = view.findViewById(R.id.status);
 
         // load the shared preferences data and put them in the appropriate fields
         SharedPreferences load = getActivity().getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
         if (load.contains("User Name")) {
             cn.setText("Welcome " + load.getString("User Name", ""));
         }
+
+        if (load.contains("Cat List Length")) {
+            int length = load.getInt("Cat List Length", 0);
+            status.setText("You have " + length + " cats!");
+            Log.d("LOAD", "Length exists");
+        }
+        else Log.d("LOAD", "No length");
+
+
 
     }
 }

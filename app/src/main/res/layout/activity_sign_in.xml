@@ -37,6 +37,7 @@
             android:layout_height="wrap_content"
             android:textSize="24dp"
             android:maxLines="1"
+            android:singleLine="true"
             />
 
         <TextView
@@ -54,6 +55,7 @@
             android:layout_height="wrap_content"
             android:textSize="24dp"
             android:maxLines="1"
+            android:singleLine="true"
             />
 
         <Button

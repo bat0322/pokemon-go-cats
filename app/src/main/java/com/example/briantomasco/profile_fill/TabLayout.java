@@ -14,7 +14,16 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.briantomasco.profile_fill.view.SlidingTabLayout;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 
@@ -25,6 +34,9 @@ public class TabLayout extends AppCompatActivity {
     private ArrayList<Fragment> fragments;
     private TabViewPagerAdapter mViewPagerAdapter;
 
+    // server address for sign in and cat list
+    final String CATLIST_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/catlist.pl?";
+    protected int length;
 
 
 
@@ -49,6 +61,52 @@ public class TabLayout extends AppCompatActivity {
         slidingTabLayout.setDistributeEvenly(true);
         slidingTabLayout.setViewPager(mViewPager);
 
+        final SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
+        String char_name = new String();
+        String pw = new String();
+
+        if (load.contains("User Name")) {
+            char_name = load.getString("User Name", "");
+        }
+        if (load.contains("Password")) {
+            pw = load.getString("Password", "");
+        }
+
+        String url = CATLIST_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        JsonArrayRequest catlist = new JsonArrayRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            length = response.length();
+                            final SharedPreferences.Editor editor = load.edit();
+                            editor.putInt("Cat List Length", length);
+                            editor.commit();
+
+                            //TODO: will probably want to save the JSONArray to do something with it
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(),
+                                    e.getMessage(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(),
+                                "Error: " + error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+        );
+
+        queue.add(catlist);
     }
 
     // when sign out is clicked, clear local data and return to sign in activity
