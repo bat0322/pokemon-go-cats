@@ -87,7 +87,6 @@ public class TabLayout extends AppCompatActivity {
                             editor.putInt("Cat List Length", length);
                             editor.commit();
 
-                            //TODO: will probably want to save the JSONArray to do something with it
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(),
                                     e.getMessage(),
