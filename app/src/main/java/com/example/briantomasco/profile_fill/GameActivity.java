@@ -39,7 +39,7 @@ import org.json.JSONObject;
  * Created by zacharyjohnson on 10/24/17.
  */
 
-public class GameActivity extends FragmentActivity implements OnMapReadyCallback {
+public class GameActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener {
 
     private GoogleMap map;
     final int PERMISSIONS_REQUEST_FINE_LOCATION = 1;
@@ -152,20 +152,29 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 Location loc = locationManager.getLastKnownLocation(provider);
                 if (loc != null) {
                     updateWithNewLocation(loc);
+                    Log.d("LOCATION", "loc exists.");
                 }
-                //locationManager.requestLocationUpdates(provider,, this);
+                else {
+                    Log.d("LOCATION", "loc does not exist");
+                }
+                locationManager.requestLocationUpdates(provider,0,0,this);
             }
         }
     }
 
     protected void updateWithNewLocation(Location loc) {
         if (loc != null) {
+            Log.d("LOCATION", "Location exists.");
             LatLng loca = new LatLng(loc.getLatitude(),loc.getLongitude());
             current = loca;
             if (self != null) self.remove();
             self = map.addMarker(new MarkerOptions().position(loca).title("Your Location"));
             moveToCurrentLocation(loca);
         }
+        else {
+            Log.d("LOCATION", "Location does not exist");
+        }
+
     }
 
     private void moveToCurrentLocation(LatLng currentLocation)
@@ -221,5 +230,22 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
 
+    }
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+    @Override
+    public void onLocationChanged(Location location) {
+        // Called whenever the location is changed.
+        updateWithNewLocation(location);
+    }
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        // Called when the provider status changes.
     }
 }
