@@ -1,39 +1,53 @@
 package com.example.briantomasco.profile_fill;
 
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.squareup.picasso.Picasso;
 
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.net.URL;
 
 /**
  * Created by zacharyjohnson on 10/24/17.
@@ -44,14 +58,33 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap map;
     final int PERMISSIONS_REQUEST_FINE_LOCATION = 1;
     final String CATLIST_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/catlist.pl?";
+    final String PET_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/pat.pl?";
     private Marker self;
     private LatLng current;
     private boolean zoomedOut = true;
+    private String char_name;
+    private String pw;
+    private Button petButton;
+    private TextView bannerText;
+    private ImageView bannerPic;
+    private boolean startUp = true;  // zooms and moves to current location only on startup
+    private int selectedId;  // saves selected cat's ID for orientation change
+    private Marker selectedMarker;
+    private Bitmap grayCatIcon;
+    private Bitmap greenCatIcon;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        petButton = findViewById(R.id.pet_button);
+        bannerText = findViewById(R.id.banner_text);
+        bannerPic = findViewById(R.id.banner_image);
+        grayCatIcon = BitmapFactory.decodeResource(this.getResources(), R.drawable.marker_grey);
+        greenCatIcon = BitmapFactory.decodeResource(this.getResources(), R.drawable.marker_green);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -65,8 +98,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
 
         final SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
-        String char_name = new String();
-        String pw = new String();
 
         if (load.contains("User Name")) {
             char_name = load.getString("User Name", "");
@@ -89,7 +120,19 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                JSONObject cat = response.getJSONObject(i);
                                if (cat.has("lat") && cat.has("lng")) {
                                    LatLng catPos = new LatLng(cat.getDouble("lat"), cat.getDouble("lng"));
-                                   map.addMarker(new MarkerOptions().position(catPos).title(cat.getString("name")));
+                                   Marker marker = map.addMarker(new MarkerOptions()
+                                           .position(catPos)
+                                           .icon(BitmapDescriptorFactory.fromBitmap(grayCatIcon)));
+                                   marker.setTag(cat);
+                                   if (cat.getInt("catId") == selectedId) markerSelected(marker);
+                                   map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                                       @Override
+                                       public boolean onMarkerClick(Marker marker) {
+                                           markerSelected(marker);
+                                           return true;
+                                       }
+
+                                   });
                                }
                            }
 
@@ -113,19 +156,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
         queue.add(catlist);
 
-
-
-        // Add a marker in Hanover and move the camera
-        double x = Double.parseDouble(getResources().getString(R.string.theGreen_x));
-        double y = Double.parseDouble(getResources().getString(R.string.theGreen_y));
-
-        LatLng hanover = new LatLng(x, y);
-        Log.d("Coords", " " + x + " " + y);
-
         // Add a marker and move the camera
-        map.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        map.moveCamera(CameraUpdateFactory.newLatLng(hanover));
-        map.moveCamera(CameraUpdateFactory.zoomTo(16f));
+        map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         allowLocation();
         getLocation();
 
@@ -133,10 +165,98 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onMapClick(LatLng p0) {
                 if (p0 != null) {
-                    //TODO do different stuff
+                    selectedId = 0;
+                    if (selectedMarker != null) {
+                        selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(grayCatIcon));
+                        selectedMarker = null;
+                    }
+                    changeBannerDefault();
                 }
             }
         });
+    }
+
+    // when a cat is selected, change the banner appropriately
+    protected void markerSelected(Marker marker){
+        JSONObject cat = (JSONObject) marker.getTag();
+        if (cat != null) {
+            try {
+                // set old selected icon to gray
+                if (selectedMarker != null) selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(grayCatIcon));
+
+                // use Picasso library to load bitmap from url
+                // documentation at: square.github.io/picasso/
+                String imageUrl = cat.getString("picUrl");
+                Picasso.with(getApplicationContext()).load(imageUrl).into(bannerPic);
+
+                // change icon to green
+                marker.setIcon(BitmapDescriptorFactory.fromBitmap(greenCatIcon));
+
+                // change text for the cat currently selected
+                float[] results = new float[1];
+                Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
+                bannerText.setText(cat.getString("name") + " is " + (int)results[0] + " meters away.");
+                LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        3.0f
+                );
+                bannerText.setLayoutParams(textParams);
+
+                // show button as gray or blue depending on if it's been petted
+                petButton.setVisibility(View.VISIBLE);
+                LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        1.0f
+                );
+                petButton.setLayoutParams(buttonParams);
+                if (cat.getBoolean("petted")) {
+                    petButton.setClickable(false);
+                    petButton.setBackgroundColor(Color.GRAY);
+                    petButton.setTextColor(Color.BLACK);
+                } else {
+                    petButton.setClickable(true);
+                    petButton.setBackgroundColor(Color.BLUE);
+                    petButton.setTextColor(Color.WHITE);
+                }
+
+                // save this cat as the selected one
+                selectedId = cat.getInt("catId");
+                selectedMarker = marker;
+
+            } catch (JSONException e) {
+                Toast.makeText(getApplicationContext(), "Error getting cat info", Toast.LENGTH_SHORT).show();
+                Log.d("CAT MARKER", e.getMessage());
+            }
+        }
+    }
+
+    // change banner back to default
+    protected void changeBannerDefault() {
+
+        // set image back to click
+        bannerPic.setImageResource(R.drawable.click_icon);
+
+        // change text back and inflate to full width
+        bannerText.setText("Try to click the markers!");
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                4.0f
+        );
+        bannerText.setLayoutParams(textParams);
+
+        // hide the pet button
+        petButton.setVisibility(View.INVISIBLE);
+        petButton.setClickable(false);
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                0.0f
+        );
+
+
     }
 
     protected void getLocation() {
@@ -152,10 +272,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 Location loc = locationManager.getLastKnownLocation(provider);
                 if (loc != null) {
                     updateWithNewLocation(loc);
-                    Log.d("LOCATION", "loc exists.");
-                }
-                else {
-                    Log.d("LOCATION", "loc does not exist");
                 }
                 locationManager.requestLocationUpdates(provider,0,0,this);
             }
@@ -164,15 +280,14 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     protected void updateWithNewLocation(Location loc) {
         if (loc != null) {
-            Log.d("LOCATION", "Location exists.");
             LatLng loca = new LatLng(loc.getLatitude(),loc.getLongitude());
             current = loca;
             if (self != null) self.remove();
+            else if (startUp) {
+                moveToCurrentLocation(loca);
+                startUp = false;
+            }
             self = map.addMarker(new MarkerOptions().position(loca).title("Your Location"));
-            moveToCurrentLocation(loca);
-        }
-        else {
-            Log.d("LOCATION", "Location does not exist");
         }
 
     }
@@ -185,7 +300,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             // Zoom in, animating the camera.
             map.animateCamera(CameraUpdateFactory.zoomIn());
             // Zoom out to zoom level 10, animating with a duration of 1 second.
-            map.animateCamera(CameraUpdateFactory.zoomTo(15), 1000, null);
+            map.animateCamera(CameraUpdateFactory.zoomTo(18f), 1000, null);
             zoomedOut = false;
         }
     }
@@ -228,9 +343,71 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         }
-
-
     }
+
+    // when pet is clicked
+    public void onPetClick(View v) {
+        // add user info then cat/location info to pet url
+        String url = PET_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
+        url += "&catid=" + selectedId + "&lat=" + current.latitude + "&lng=" + current.longitude;
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String status = response.getString("status");
+                            if (status.equals("OK")){
+                                JSONObject cat = (JSONObject) selectedMarker.getTag();
+                                cat.put("petted", "true");
+                                selectedMarker.setTag(cat);
+                                petButton.setClickable(false);
+                                petButton.setBackgroundColor(Color.GRAY);
+                                petButton.setTextColor(Color.BLACK);
+                            }
+                            else {
+                                String reason = response.getString("reason");
+                                if (reason.charAt(0) == 'T') {
+                                    Toast.makeText(getApplicationContext(), reason, Toast.LENGTH_SHORT).show();
+                                }
+                                else {
+                                    Toast.makeText(getApplicationContext(), response.getString("reason"), Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
+                        catch (JSONException e) {
+                            Toast.makeText(getApplicationContext(), "Error checking with server", Toast.LENGTH_SHORT).show();
+                            Log.d("PET JSON ERROR", e.getMessage());
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+        queue.add(jsonObjReq);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState){
+        outState.putBoolean("start", startUp);
+        outState.putInt("selected", selectedId);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle inState){
+        super.onRestoreInstanceState(inState);
+        startUp = inState.getBoolean("start");
+        selectedId = inState.getInt("selected");
+    }
+
     @Override
     public void onProviderEnabled(String provider) {
 

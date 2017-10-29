@@ -5,7 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".GameActivity">
+    tools:context=".GameActivity"
+    android:orientation="vertical"
+    android:weightSum="5"
+    >
 
     <fragment
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -13,6 +16,60 @@
         android:id="@+id/map"
         class="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="5dp"
+        android:weightSum="5"
+        >
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+
+            <ImageView
+                android:id="@+id/banner_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/click_icon"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/banner_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="4"
+            android:padding="20dp"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:textSize="24dp"
+            android:text="Try to click the markers!"/>
+
+        <Button
+            android:id="@+id/pet_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:layout_gravity="center_vertical"
+            android:textSize="20dp"
+            android:text="Pet"
+            android:visibility="invisible"
+            android:clickable="false"
+            android:onClick="onPetClick"
+            />
+
+
+    </LinearLayout>
+
 
 </LinearLayout>
