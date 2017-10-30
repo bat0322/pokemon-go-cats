@@ -1,5 +1,6 @@
 package com.example.briantomasco.profile_fill;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -48,6 +49,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URL;
+import java.util.ArrayList;
 
 /**
  * Created by zacharyjohnson on 10/24/17.
@@ -64,14 +66,16 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean zoomedOut = true;
     private String char_name;
     private String pw;
+    private int distance;
     private Button petButton;
     private TextView bannerText;
     private ImageView bannerPic;
-    private boolean startUp = true;  // zooms and moves to current location only on startup
     private int selectedId;  // saves selected cat's ID for orientation change
     private Marker selectedMarker;
     private Bitmap grayCatIcon;
     private Bitmap greenCatIcon;
+    private ArrayList<Marker> catMarkers = new ArrayList<>();
+    SharedPreferences load;
 
 
 
@@ -79,6 +83,19 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
+
+        if (load.contains("User Name")) {
+            char_name = load.getString("User Name", "");
+        }
+        if (load.contains("Password")) {
+            pw = load.getString("Password", "");
+        }
+        if (load.contains("Distance")){
+            distance = load.getInt("Distance",250);
+            Log.d("DISTANCE", Integer.toString(load.getInt("Distance", 2)));
+        }
 
         petButton = findViewById(R.id.pet_button);
         bannerText = findViewById(R.id.banner_text);
@@ -91,21 +108,14 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
     }
 
+    //callback for when the Google Map is ready to be interacted with
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
+        googleMap.getUiSettings().setScrollGesturesEnabled(false);
+        googleMap.getUiSettings().setZoomGesturesEnabled(false);
         map = googleMap;
 
-
-        final SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
-
-        if (load.contains("User Name")) {
-            char_name = load.getString("User Name", "");
-        }
-        if (load.contains("Password")) {
-            pw = load.getString("Password", "");
-        }
-
+        //get the catlist from the server
         String url = CATLIST_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         JsonArrayRequest catlist = new JsonArrayRequest(
@@ -116,6 +126,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void onResponse(JSONArray response) {
                         try {
+
+                            // loop through the response array, add to the marker list, find their distances from current location
                            for (int i =0; i < response.length(); i++) {
                                JSONObject cat = response.getJSONObject(i);
                                if (cat.has("lat") && cat.has("lng")) {
@@ -124,6 +136,15 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                            .position(catPos)
                                            .icon(BitmapDescriptorFactory.fromBitmap(grayCatIcon)));
                                    marker.setTag(cat);
+                                   catMarkers.add(marker);
+                                   float[] results = new float[1];
+                                   Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
+                                   float diffDist = results[0];
+                                   Log.d("DIFF", Integer.toString((int)diffDist));
+
+
+                                   //only make the markers visible if they are within the preselected range
+                                   if ((int)diffDist > distance) marker.setVisible(false);
                                    if (cat.getInt("catId") == selectedId) markerSelected(marker);
                                    map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                        @Override
@@ -156,11 +177,12 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
         queue.add(catlist);
 
-        // Add a marker and move the camera
+        // choose map type and find the current location
         map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
         allowLocation();
         getLocation();
 
+        //deselect all cats when user clicks on the map
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng p0) {
@@ -195,6 +217,12 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 // change text for the cat currently selected
                 float[] results = new float[1];
                 Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
+                if (results[0] > distance) {
+                    selectedMarker = null;
+                    selectedId = 0;
+                    changeBannerDefault();
+                    return;
+                }
                 bannerText.setText(cat.getString("name") + " is " + (int)results[0] + " meters away.");
                 LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                         0,
@@ -259,6 +287,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    //find current location. Borrowed heavily from class notes from LiveLocationUpdates
     protected void getLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -273,25 +302,45 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 if (loc != null) {
                     updateWithNewLocation(loc);
                 }
+                //this line is necessary to make sure you continue to update location after the first request
                 locationManager.requestLocationUpdates(provider,0,0,this);
             }
         }
     }
 
+    //container method for finding the new current location
     protected void updateWithNewLocation(Location loc) {
         if (loc != null) {
             LatLng loca = new LatLng(loc.getLatitude(),loc.getLongitude());
             current = loca;
+
+            //remove marker from previous location
             if (self != null) self.remove();
-            else if (startUp) {
-                moveToCurrentLocation(loca);
-                startUp = false;
-            }
+            moveToCurrentLocation(loca);
+
             self = map.addMarker(new MarkerOptions().position(loca).title("Your Location"));
+            if (selectedMarker!=null) markerSelected(selectedMarker);
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(loca, 18f));
+
+            //loop through the cats with each update and set visibility according to distance as above
+            for (Marker marker : catMarkers){
+                JSONObject cat = (JSONObject) marker.getTag();
+                float[] results = new float[1];
+                try {
+                    Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
+                }
+                catch (JSONException e){
+                    Log.d("CAT MARKER JSON ERROR", e.getMessage());
+                }
+                float diffDist = results[0];
+                if ((int)diffDist > distance) marker.setVisible(false);
+                else marker.setVisible(true);
+            }
         }
 
     }
 
+    //taken from class notes in LiveLocationUpdate. Set where the camera focus is... to current location
     private void moveToCurrentLocation(LatLng currentLocation)
     {
         LatLngBounds bounds = map.getProjection().getVisibleRegion().latLngBounds;
@@ -305,6 +354,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //set the options for finding the best provider. taken from aforementioned class notes
     protected Criteria getCriteria() {
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
@@ -331,6 +381,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             map.setMyLocationEnabled(true);
         }
     }
+    //check the status of the permissions request
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                               String permissions[], int[] grantResults) {
@@ -350,6 +401,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         // add user info then cat/location info to pet url
         String url = PET_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
         url += "&catid=" + selectedId + "&lat=" + current.latitude + "&lng=" + current.longitude;
+
+        //send a pet request
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(
                 Request.Method.GET,
@@ -367,14 +420,17 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                 petButton.setClickable(false);
                                 petButton.setBackgroundColor(Color.GRAY);
                                 petButton.setTextColor(Color.BLACK);
+                                Intent successIntent = new Intent("SUCCESS");
+                                startActivity(successIntent);
+
                             }
                             else {
                                 String reason = response.getString("reason");
                                 if (reason.charAt(0) == 'T') {
-                                    Toast.makeText(getApplicationContext(), reason, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), "Too far from cat", Toast.LENGTH_SHORT).show();
                                 }
                                 else {
-                                    Toast.makeText(getApplicationContext(), response.getString("reason"), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getApplicationContext(), reason, Toast.LENGTH_SHORT).show();
                                 }
                             }
                         }
@@ -394,20 +450,21 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         queue.add(jsonObjReq);
     }
 
+    //handles configuration changes. saves which marker is selected
     @Override
     public void onSaveInstanceState(Bundle outState){
-        outState.putBoolean("start", startUp);
         outState.putInt("selected", selectedId);
         super.onSaveInstanceState(outState);
     }
 
+    //finds the selected id and restores onConfiguration change
     @Override
     public void onRestoreInstanceState(Bundle inState){
         super.onRestoreInstanceState(inState);
-        startUp = inState.getBoolean("start");
         selectedId = inState.getInt("selected");
     }
 
+    //need to provide the following methods in order to implement LocationListener
     @Override
     public void onProviderEnabled(String provider) {
 

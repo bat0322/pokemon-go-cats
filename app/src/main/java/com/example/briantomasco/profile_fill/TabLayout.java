@@ -11,21 +11,30 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.briantomasco.profile_fill.view.SlidingTabLayout;
 
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.example.briantomasco.profile_fill.CreateAcctActivity.SHARED_PREF;
 
 public class TabLayout extends AppCompatActivity {
     //Changes
@@ -34,9 +43,18 @@ public class TabLayout extends AppCompatActivity {
     private ArrayList<Fragment> fragments;
     private TabViewPagerAdapter mViewPagerAdapter;
 
-    // server address for sign in and cat list
+    private String char_name;
+    private String pw;
+
+    // server address for reset and cat list
     final String CATLIST_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/catlist.pl?";
+    final String RESET_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/resetlist.pl?";
+    final String PROFILE_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/profile.pl";
     protected int length;
+    JSONObject profile;
+    SharedPreferences load;
+
+    private EditText distance;
 
 
 
@@ -61,9 +79,9 @@ public class TabLayout extends AppCompatActivity {
         slidingTabLayout.setDistributeEvenly(true);
         slidingTabLayout.setViewPager(mViewPager);
 
-        final SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
-        String char_name = new String();
-        String pw = new String();
+        distance = findViewById(R.id.distance_pref);
+
+        load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
 
         if (load.contains("User Name")) {
             char_name = load.getString("User Name", "");
@@ -71,7 +89,11 @@ public class TabLayout extends AppCompatActivity {
         if (load.contains("Password")) {
             pw = load.getString("Password", "");
         }
+        getCatList();
+    }
 
+    //acquire the catList from the server. Finds the length of the list and stores it locally
+    protected void getCatList() {
         String url = CATLIST_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         JsonArrayRequest catlist = new JsonArrayRequest(
@@ -108,8 +130,14 @@ public class TabLayout extends AppCompatActivity {
         queue.add(catlist);
     }
 
+    //when you click on your information, go to the Edit Profile Activity
+    protected void onProfInfoClick(View v) {
+        Intent editInfo = new Intent("EDIT PROF");
+        startActivity(editInfo);
+    }
+
     // when sign out is clicked, clear local data and return to sign in activity
-    protected void onSignOutClick(View v){
+    protected void onSignOutClick(View v) {
         SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
         load.edit().clear().commit();
         Intent signOut = new Intent("SIGN");
@@ -160,9 +188,136 @@ public class TabLayout extends AppCompatActivity {
         else Toast.makeText(getApplicationContext(), "Public score turned off", Toast.LENGTH_SHORT).show();
     }
 
+    //Sends a request to the server to update the catlist
+    protected void onResetClick(View v) {
+        String url = RESET_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            String status = response.getString("status");
+                            if (status.equals("OK")) {
+                                Toast.makeText(getApplicationContext(), "List reset", Toast.LENGTH_SHORT).show();
+                            }
+                            else {
+                                Toast.makeText(getApplicationContext(), response.getString("error"), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        catch (JSONException e) {
+                            Toast.makeText(getApplicationContext(), "Error checking with server", Toast.LENGTH_SHORT).show();
+                            Log.d("PET JSON ERROR", e.getMessage());
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }
+        );
+        queue.add(jsonObjReq);
+        getCatList();
+    }
+
+    //when you click the play button, open the game activity
     protected void onPlayClick(View v) {
         Intent play = new Intent("GAME");
         startActivity(play);
     }
 
+    //saves the settings locally and sends a request to the server to update. Get request to find the settings and Post to update
+    protected void onPrefSaveClick(View v) {
+
+        final RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String url = PROFILE_SERVER_ADDRESS + "?name=" + char_name + "&password=" + pw;
+
+        JsonObjectRequest jsObjReq = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            if (response.has("error")) {
+                                Toast.makeText(getApplicationContext(),
+                                        response.get("error").toString(),
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                            else {
+                                profile = response;
+                                try {
+                                    profile.put("sound", load.getBoolean("Sound", false));
+                                    profile.put("vibrate", load.getBoolean("Vibrate", false));
+                                    profile.put("public", load.getBoolean("Public", false));
+                                    profile.put("distance", load.getInt("Distance", 250));
+                                }
+                                catch (JSONException e) {
+                                    Log.d("JSON EDIT ERROR", e.getMessage());
+                                }
+                                String url = PROFILE_SERVER_ADDRESS;
+                                JsonObjectRequest saveProfile = new JsonObjectRequest(
+                                        Request.Method.POST,
+                                        url,
+                                        profile,
+                                        new Response.Listener<JSONObject>() {
+                                            @Override
+                                            public void onResponse(JSONObject response) {
+                                                try{
+                                                    if (response.getString("status").equals("OK")){
+                                                        Toast.makeText(getApplicationContext(), "Changes saved", Toast.LENGTH_LONG).show();
+                                                    }
+                                                    else{
+                                                        Toast.makeText(getApplicationContext(), "Error saving changes, try again", Toast.LENGTH_LONG).show();
+                                                        Log.d("ERROR SAVING NEW PROF", response.get("data").toString());
+                                                    }
+                                                }
+                                                catch (JSONException e){
+                                                    Toast.makeText(getApplicationContext(), "Error saving changes", Toast.LENGTH_LONG).show();
+                                                    Log.d("ERROR SAVING NEW PROF", e.getMessage());
+                                                }
+                                            }
+                                        },
+                                        new Response.ErrorListener() {
+                                            @Override
+                                            public void onErrorResponse(VolleyError e) {
+                                                Toast.makeText(getApplicationContext(), "Error saving changes", Toast.LENGTH_LONG).show();
+                                                Log.d("ERROR SAVING NEW PROF", e.getMessage());
+                                            }
+                                        }
+                                );
+                                queue.add(saveProfile);
+                            }
+                        } catch (Exception e) {
+                            Log.d("JSON AVAIL", e.getMessage());
+                        }
+                    }
+                },
+                // tell user if connection failed
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplicationContext(),
+                                "Could not get profile: " + error.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+        ) {
+            // change http header, borrowed from example code
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Accept", "application/json");
+                return params;
+            }
+        };
+        //add request to Volley queue for execution
+        queue.add(jsObjReq);
+    }
 }

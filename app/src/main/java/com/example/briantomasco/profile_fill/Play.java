@@ -38,6 +38,7 @@ public class Play extends Fragment {
             cn.setText("Welcome " + load.getString("User Name", ""));
         }
 
+        //find the length of the cat list and display it on the splash screen
         if (load.contains("Cat List Length")) {
             int length = load.getInt("Cat List Length", 0);
             status.setText("You have " + length + " cats!");

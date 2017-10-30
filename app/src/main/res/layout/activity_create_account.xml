@@ -14,57 +14,14 @@
         android:layout_height="match_parent"
         >
 
-    <!--Enclose all content in a vertipreferencesyout-->
+    <!--Enclose all content in a vertical LinearLayout-->
         <LinearLayout
             android:id="@+id/profile_fill_linear"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:weightSum="4">
-                <!-- use a weighted sum to arrange buttons at top-->
-                <!--Will implement functionality at later date-->
 
-                <Button
-                    android:id="@+id/Tag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:clickable="false"
-                    android:text="Tag" />
-
-                <Button
-                    android:id="@+id/History"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toRightOf="@id/Tag"
-                    android:layout_weight="1"
-                    android:clickable="false"
-                    android:text="History" />
-
-                <Button
-                    android:id="@+id/Score"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_toLeftOf="@id/Settings"
-                    android:layout_weight="1"
-                    android:clickable="false"
-                    android:text="Score" />
-
-                <Button
-                    android:id="@+id/Settings"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentRight="true"
-                    android:layout_weight="1"
-                    android:clickable="false"
-                    android:text="Settings" />
-
-            </LinearLayout>
 
             <!--This button will switch between "Clear" and "I already have an account"-->
             <Button

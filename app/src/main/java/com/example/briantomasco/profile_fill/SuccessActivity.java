@@ -17,11 +17,13 @@ public class SuccessActivity extends AppCompatActivity{
         setContentView(R.layout.activity_success);
     }
 
+    //when you click the "More Cats!" button, go back to the game
     protected void onCatsClick(View v) {
         Intent backIntent = new Intent("GAME");
         startActivity(backIntent);
     }
 
+    //when you click the "Main Menu" button, go back to the settings page
     protected void onMenuClick(View v) {
         Intent menuIntent = new Intent("TAB");
         startActivity(menuIntent);

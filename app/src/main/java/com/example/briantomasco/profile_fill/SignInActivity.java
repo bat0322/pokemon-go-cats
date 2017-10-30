@@ -92,6 +92,10 @@ public class SignInActivity extends AppCompatActivity {
                                 String char_name = response.getString("name");
                                 String pass = response.getString("password");
                                 String full_name = response.getString("full_name");
+                                boolean sound = response.getBoolean("sound");
+                                boolean vibrate = response.getBoolean("vibrate");
+                                boolean pub = response.getBoolean("public");
+                                int distance = response.getInt("distance");
 
                                 SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
                                 final SharedPreferences.Editor editor = save.edit();
@@ -101,14 +105,19 @@ public class SignInActivity extends AppCompatActivity {
                                 editor.putString("User Name", char_name);
                                 editor.putString("Password", pass);
 
+                                // booleans to handle editing profile info screen
+                                editor.putBoolean("Match", true);
+                                editor.putBoolean("Available", true);
+
 
                                 // save boolean saying a profile is logged in
                                 editor.putBoolean("Logged In", true);
 
                                 // save default booleans for Settings
-                                editor.putBoolean("Sound", false);
-                                editor.putBoolean("Vibrate", false);
-                                editor.putBoolean("Public", false);
+                                editor.putBoolean("Sound", sound);
+                                editor.putBoolean("Vibrate", vibrate);
+                                editor.putBoolean("Public", pub);
+                                editor.putInt("Distance", distance);
 
                                 editor.commit();
 

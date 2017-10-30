@@ -72,6 +72,10 @@ public class CreateAcctActivity extends AppCompatActivity {
     private EditText cn;
     private EditText pw;
 
+    // profile info
+    private String char_name;
+    private String pass;
+
     // keep track of which fields are empty (useful for clear button)
     private boolean pwEmpty = true;
     private boolean fnEmpty = true;
@@ -113,11 +117,13 @@ public class CreateAcctActivity extends AppCompatActivity {
             fnEmpty = false;
         }
         if (load.contains("User Name")) {
-            cn.setText(load.getString("User Name", ""));
+            char_name = load.getString("User Name", "");
+            cn.setText(char_name);
             cnEmpty = false;
         }
         if (load.contains("Password")) {
-            pw.setText(load.getString("Password", ""));
+            pass = load.getString("Password", "");
+            pw.setText(pass);
             pwEmpty = false;
         }
         if (load.contains("Match")){
@@ -386,7 +392,7 @@ public class CreateAcctActivity extends AppCompatActivity {
         else if (requestCode == CONFIRM){
             // check if there's a pw match
             if (data!= null) match = data.getBooleanExtra("match", false);
-            if (match){
+            if (match) {
                 confirmButton.setText("Confirmed");
                 confirmButton.setTextColor(Color.GREEN);
             }
@@ -638,10 +644,11 @@ public class CreateAcctActivity extends AppCompatActivity {
             // save boolean saying a profile is logged in
             editor.putBoolean("Logged In", true);
 
-            // save default booleans for Settings
+            // save default values for Settings
             editor.putBoolean("Sound", false);
             editor.putBoolean("Vibrate", false);
             editor.putBoolean("Public", false);
+            editor.putInt("Distance", 250);
 
 
             // tell user save data is being uploaded to the server
@@ -657,6 +664,13 @@ public class CreateAcctActivity extends AppCompatActivity {
                 profile.put("name", cn.getText());
                 profile.put("password", pw.getText());
                 profile.put("full_name", fn.getText());
+
+                // save default settings
+                profile.put("sound", false);
+                profile.put("vibrate", false);
+                profile.put("public", false);
+                profile.put("distance", 250);
+
 
                 // will not work for signing in on different devices, will handle in later lab
                 if (bitmap != null) profile.put("image_path", path);
