@@ -55,6 +55,7 @@ public class TabLayout extends AppCompatActivity {
     SharedPreferences load;
 
     private EditText distance;
+    static JSONArray catsJSON;
 
 
 
@@ -68,7 +69,6 @@ public class TabLayout extends AppCompatActivity {
 
         fragments = new ArrayList<Fragment>();
         fragments.add(new Preferences());
-        fragments.add(new Ranking());
         fragments.add(new Play());
         fragments.add(new History());
 
@@ -104,6 +104,7 @@ public class TabLayout extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONArray response) {
                         try {
+                            catsJSON = response;
                             length = response.length();
                             final SharedPreferences.Editor editor = load.edit();
                             editor.putInt("Cat List Length", length);
@@ -130,14 +131,19 @@ public class TabLayout extends AppCompatActivity {
         queue.add(catlist);
     }
 
+    //return the cat list
+    public static JSONArray getCats() {
+        return catsJSON;
+    }
+
     //when you click on your information, go to the Edit Profile Activity
-    protected void onProfInfoClick(View v) {
+    public void onProfInfoClick(View v) {
         Intent editInfo = new Intent("EDIT PROF");
         startActivity(editInfo);
     }
 
     // when sign out is clicked, clear local data and return to sign in activity
-    protected void onSignOutClick(View v) {
+    public void onSignOutClick(View v) {
         SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
         load.edit().clear().commit();
         Intent signOut = new Intent("SIGN");
@@ -146,7 +152,7 @@ public class TabLayout extends AppCompatActivity {
     }
 
     // on clicking switches, save current state to local data
-    protected void onSoundClick(View v){
+    public void onSoundClick(View v){
 
         // get the previous stored setting
         SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
@@ -160,7 +166,7 @@ public class TabLayout extends AppCompatActivity {
         else Toast.makeText(getApplicationContext(), "Sound turned off", Toast.LENGTH_SHORT).show();
     }
 
-    protected void onVibrateClick(View v){
+    public void onVibrateClick(View v){
 
         // get the previous stored setting
         SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
@@ -174,7 +180,7 @@ public class TabLayout extends AppCompatActivity {
         else Toast.makeText(getApplicationContext(), "Vibrate turned off", Toast.LENGTH_SHORT).show();
     }
 
-    protected void onPublicClick(View v){
+    public void onPublicClick(View v){
 
         // get the previous stored setting
         SharedPreferences load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
@@ -189,7 +195,7 @@ public class TabLayout extends AppCompatActivity {
     }
 
     //Sends a request to the server to update the catlist
-    protected void onResetClick(View v) {
+    public void onResetClick(View v) {
         String url = RESET_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(
@@ -226,13 +232,13 @@ public class TabLayout extends AppCompatActivity {
     }
 
     //when you click the play button, open the game activity
-    protected void onPlayClick(View v) {
+    public void onPlayClick(View v) {
         Intent play = new Intent("GAME");
         startActivity(play);
     }
 
     //saves the settings locally and sends a request to the server to update. Get request to find the settings and Post to update
-    protected void onPrefSaveClick(View v) {
+    public void onPrefSaveClick(View v) {
 
         final RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
         String url = PROFILE_SERVER_ADDRESS + "?name=" + char_name + "&password=" + pw;
