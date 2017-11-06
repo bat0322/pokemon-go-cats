@@ -28,6 +28,9 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.picasso.Picasso;
+import com.varunmishra.catcameraoverlay.CameraViewActivity;
+import com.varunmishra.catcameraoverlay.Config;
+import com.varunmishra.catcameraoverlay.OnCatPetListener;
 
 import android.Manifest;
 import android.content.Context;
@@ -56,7 +59,7 @@ import java.util.ArrayList;
  * Created by zacharyjohnson on 10/24/17.
  */
 
-public class GameActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener {
+public class GameActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener, OnCatPetListener {
 
     private GoogleMap map;
     final int PERMISSIONS_REQUEST_FINE_LOCATION = 1;
@@ -399,6 +402,27 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     // when pet is clicked
     public void onPetClick(View v) {
+
+        JSONObject currentCat = (JSONObject) selectedMarker.getTag();
+
+        try {
+            Config.catName = currentCat.getString("name");
+            Config.catLatitude = currentCat.getDouble("lat");
+            Config.catLongitude = currentCat.getDouble("lng");
+            Config.locDistanceRange = 30;
+            Config.useLocationFilter = false;
+            Config.onCatPetListener = this;
+            Intent i = new Intent(this, CameraViewActivity.class);
+            startActivity(i);
+
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    public void onCatPet(String catName){
+
         // add user info then cat/location info to pet url
         String url = PET_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
         url += "&catid=" + selectedId + "&lat=" + current.latitude + "&lng=" + current.longitude;
@@ -451,6 +475,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(jsonObjReq);
     }
+
+
 
 
     //handles configuration changes. saves which marker is selected
