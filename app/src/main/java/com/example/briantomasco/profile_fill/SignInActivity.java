@@ -62,6 +62,7 @@ public class SignInActivity extends AppCompatActivity {
             if (load.getBoolean("Logged In", false)) {
                 Intent goToTab = new Intent("TAB");
                 startActivity(goToTab);
+                finish();
             }
         }
     }

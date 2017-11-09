@@ -7,7 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".GameActivity"
     android:orientation="vertical"
-    android:weightSum="5"
+    android:weightSum="4"
     >
 
     <fragment
@@ -17,7 +17,7 @@
         class="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4"
+        android:layout_weight="3"
         />
 
     <LinearLayout
@@ -27,6 +27,7 @@
         android:layout_weight="1"
         android:padding="5dp"
         android:weightSum="5"
+        android:gravity="center_vertical"
         >
 
         <RelativeLayout
@@ -57,20 +58,34 @@
             android:textSize="24dp"
             android:text="Try to click the markers!"/>
 
-        <Button
-            android:id="@+id/pet_button"
+        <LinearLayout
+            android:id="@+id/button_layout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="0"
-            android:layout_gravity="center_vertical"
-            android:textSize="20dp"
-            android:text="Pet"
-            android:visibility="invisible"
-            android:clickable="false"
-            android:onClick="onPetClick"
-            />
+            android:orientation="vertical">
 
+            <Button
+                android:id="@+id/track_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textSize="16dp"
+                android:text="Track"
+                android:clickable="false"
+                android:onClick="onTrackClick"/>
 
+            <Button
+                android:id="@+id/pet_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textSize="16dp"
+                android:text="Pet"
+                android:clickable="false"
+                android:onClick="onPetClick" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

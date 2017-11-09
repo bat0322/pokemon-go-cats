@@ -83,6 +83,8 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
+
+        <activity android:name="com.varunmishra.catcameraoverlay.CameraViewActivity" />
     </application>
 
 </manifest>

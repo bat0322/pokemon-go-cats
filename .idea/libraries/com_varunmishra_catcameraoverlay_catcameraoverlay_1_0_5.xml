@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="com.varunmishra.catcameraoverlay:catcameraoverlay-1.0.5">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/catcameraoverlay-1.0.5.aar/71bc4274961666b24fd1d94d08d56141/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/.gradle/caches/transforms-1/files-1.1/catcameraoverlay-1.0.5.aar/71bc4274961666b24fd1d94d08d56141/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.varunmishra.catcameraoverlay/catcameraoverlay/1.0.5/6e11d1e260c48a551b4b5c380dcae07a509ecd19/catcameraoverlay-1.0.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

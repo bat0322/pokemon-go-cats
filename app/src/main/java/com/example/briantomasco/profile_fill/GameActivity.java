@@ -59,12 +59,14 @@ import java.util.ArrayList;
  * Created by zacharyjohnson on 10/24/17.
  */
 
-public class GameActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener, OnCatPetListener {
+public class GameActivity extends FragmentActivity implements OnMapReadyCallback,LocationListener,OnCatPetListener {
 
     private GoogleMap map;
     final int PERMISSIONS_REQUEST_FINE_LOCATION = 1;
+    final int CAMERA_OVERLAY_CODE = 2;
     final String CATLIST_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/catlist.pl?";
     final String PET_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/pat.pl?";
+    final String TRACK_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/track.pl?";
     private Marker self;
     private LatLng current;
     private boolean zoomedOut = true;
@@ -72,6 +74,9 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private String pw;
     private int distance;
     private Button petButton;
+    private Button trackButton;
+    private LinearLayout buttonLayout;
+    private boolean tracking = false;
     private TextView bannerText;
     private ImageView bannerPic;
     private int selectedId;  // saves selected cat's ID for orientation change
@@ -98,10 +103,11 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
         if (load.contains("Distance")){
             distance = load.getInt("Distance",250);
-            Log.d("DISTANCE", Integer.toString(load.getInt("Distance", 2)));
         }
 
+        buttonLayout = findViewById(R.id.button_layout);
         petButton = findViewById(R.id.pet_button);
+        trackButton = findViewById(R.id.track_button);
         bannerText = findViewById(R.id.banner_text);
         bannerPic = findViewById(R.id.banner_image);
         grayCatIcon = BitmapFactory.decodeResource(this.getResources(), R.drawable.marker_grey);
@@ -115,8 +121,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     //callback for when the Google Map is ready to be interacted with
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        googleMap.getUiSettings().setScrollGesturesEnabled(false);
-        googleMap.getUiSettings().setZoomGesturesEnabled(false);
+        //googleMap.getUiSettings().setScrollGesturesEnabled(false);
+        //googleMap.getUiSettings().setZoomGesturesEnabled(false);
         map = googleMap;
 
         //get the catlist from the server
@@ -144,7 +150,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                    float[] results = new float[1];
                                    Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
                                    float diffDist = results[0];
-                                   Log.d("DIFF", Integer.toString((int)diffDist));
 
 
                                    //only make the markers visible if they are within the preselected range
@@ -204,8 +209,9 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     // when a cat is selected, change the banner appropriately
     protected void markerSelected(Marker marker){
+        Log.d("SELECTED", "Marker was selected");
         JSONObject cat = (JSONObject) marker.getTag();
-        if (cat != null) {
+        if (cat != null && marker != selectedMarker) {
             try {
                 // set old selected icon to gray
                 if (selectedMarker != null) selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(grayCatIcon));
@@ -235,18 +241,26 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 );
                 bannerText.setLayoutParams(textParams);
 
-                // show button as gray or blue depending on if it's been petted
-                petButton.setVisibility(View.VISIBLE);
-                LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                // expand button layout to make them visible
+                LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                         0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         1.0f
                 );
-                petButton.setLayoutParams(buttonParams);
+                buttonLayout.setLayoutParams(layoutParams);
+
+                // make buttons functional
+                trackButton.setClickable(true);
+                trackButton.setText("Track");
+                trackButton.setBackgroundColor(Color.GREEN);
+                trackButton.setTextColor(Color.WHITE);
+
+                // adjust pet button based on whether cat has been petted before
                 if (cat.getBoolean("petted")) {
                     petButton.setClickable(false);
                     petButton.setBackgroundColor(Color.GRAY);
                     petButton.setTextColor(Color.BLACK);
+
                 } else {
                     petButton.setClickable(true);
                     petButton.setBackgroundColor(Color.BLUE);
@@ -279,15 +293,15 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         );
         bannerText.setLayoutParams(textParams);
 
-        // hide the pet button
-        petButton.setVisibility(View.INVISIBLE);
+        // hide the buttons
         petButton.setClickable(false);
-        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+        trackButton.setClickable(false);
+        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 0,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 0.0f
         );
-
+        buttonLayout.setLayoutParams(layoutParams);
 
     }
 
@@ -413,13 +427,69 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             Config.useLocationFilter = false;
             Config.onCatPetListener = this;
             Intent i = new Intent(this, CameraViewActivity.class);
-            startActivity(i);
+            startActivityForResult(i, CAMERA_OVERLAY_CODE);
 
         } catch (Exception e) {
             Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
+    //when the Track button is clicked
+    public void onTrackClick(View v) {
+        if (tracking) {
+            tracking = false;
+            trackButton.setText("Track");
+            trackButton.setBackgroundColor(Color.GREEN);
+            trackButton.setTextColor(Color.WHITE);
+        }
+        else {
+            tracking = true;
+            trackButton.setText("Stop");
+            trackButton.setBackgroundColor(Color.RED);
+            trackButton.setTextColor(Color.WHITE);
+
+            // add user info then cat/location info to pet url
+            String url = TRACK_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
+            url += "&catid=" + selectedId + "&lat=" + current.latitude + "&lng=" + current.longitude;
+
+            //send a pet request
+            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+            JsonObjectRequest jsonObjReq = new JsonObjectRequest(
+                    Request.Method.GET,
+                    url,
+                    null,
+                    new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            try {
+                                String status = response.getString("status");
+                                if (status.equals("OK")){
+
+                                    finishActivity(CAMERA_OVERLAY_CODE);
+                                }
+                                else {
+                                    String reason = response.getString("reason");
+                                    Toast.makeText(getApplicationContext(), reason, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            catch (JSONException e) {
+                                Toast.makeText(getApplicationContext(), "Error checking with server", Toast.LENGTH_SHORT).show();
+                                Log.d("TRACK JSON ERROR", e.getMessage());
+                            }
+                        }
+                    },
+                    new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+
+                        }
+                    }
+            );
+            jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+            queue.add(jsonObjReq);
+        }
+
+        }
 
     public void onCatPet(String catName){
 
@@ -447,7 +517,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                 petButton.setTextColor(Color.BLACK);
                                 Intent successIntent = new Intent("SUCCESS");
                                 startActivity(successIntent);
-
+                                finishActivity(CAMERA_OVERLAY_CODE);
                             }
                             else {
                                 String reason = response.getString("reason");
@@ -483,6 +553,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onSaveInstanceState(Bundle outState){
         outState.putInt("selected", selectedId);
+        outState.putBoolean("tracking", tracking);
         super.onSaveInstanceState(outState);
     }
 
@@ -491,6 +562,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRestoreInstanceState(Bundle inState){
         super.onRestoreInstanceState(inState);
         selectedId = inState.getInt("selected");
+        tracking = inState.getBoolean("selected");
     }
 
     //need to provide the following methods in order to implement LocationListener
