@@ -52,7 +52,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URL;
 import java.util.ArrayList;
 
 /**
@@ -72,7 +71,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean zoomedOut = true;
     private String char_name;
     private String pw;
-    private int distance;
+    private int distancePref;
+    private float distanceBetween;
     private Button petButton;
     private Button trackButton;
     private LinearLayout buttonLayout;
@@ -102,7 +102,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             pw = load.getString("Password", "");
         }
         if (load.contains("Distance")){
-            distance = load.getInt("Distance",250);
+            distancePref = load.getInt("Distance",250);
         }
 
         buttonLayout = findViewById(R.id.button_layout);
@@ -153,7 +153,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                                    //only make the markers visible if they are within the preselected range
-                                   if ((int)diffDist > distance) marker.setVisible(false);
+                                   if ((int)diffDist > distancePref) marker.setVisible(false);
                                    if (cat.getInt("catId") == selectedId) markerSelected(marker);
                                    map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                        @Override
@@ -227,7 +227,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 // change text for the cat currently selected
                 float[] results = new float[1];
                 Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
-                if (results[0] > distance) {
+                if (results[0] > distancePref) {
                     selectedMarker = null;
                     selectedId = 0;
                     changeBannerDefault();
@@ -340,7 +340,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             if (selectedMarker!=null) markerSelected(selectedMarker);
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(loca, 18f));
 
-            //loop through the cats with each update and set visibility according to distance as above
+            //loop through the cats with each update and set visibility according to distancePref as above
             for (Marker marker : catMarkers){
                 JSONObject cat = (JSONObject) marker.getTag();
                 float[] results = new float[1];
@@ -351,7 +351,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.d("CAT MARKER JSON ERROR", e.getMessage());
                 }
                 float diffDist = results[0];
-                if ((int)diffDist > distance) marker.setVisible(false);
+                distanceBetween = diffDist;
+                if ((int)diffDist > distancePref) marker.setVisible(false);
                 else marker.setVisible(true);
             }
         }
@@ -452,7 +453,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             String url = TRACK_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
             url += "&catid=" + selectedId + "&lat=" + current.latitude + "&lng=" + current.longitude;
 
-            //send a pet request
+            //send a track request
             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
             JsonObjectRequest jsonObjReq = new JsonObjectRequest(
                     Request.Method.GET,
@@ -464,8 +465,20 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                             try {
                                 String status = response.getString("status");
                                 if (status.equals("OK")){
+                                    Intent trackIntent = new Intent ();
+                                    JSONObject mark = (JSONObject) selectedMarker.getTag();
+                                    String name = mark.getString("name");
+                                    String pic = mark.getString("picUrl");
+                                    trackIntent.putExtra("name", name);
+                                    trackIntent.putExtra("distancePref", distanceBetween);
+                                    trackIntent.putExtra("pic", pic);
+                                    trackIntent.setClass(getApplicationContext(), ForegroundService.class);
+                                    startService(trackIntent);
 
-                                    finishActivity(CAMERA_OVERLAY_CODE);
+
+
+
+
                                 }
                                 else {
                                     String reason = response.getString("reason");
