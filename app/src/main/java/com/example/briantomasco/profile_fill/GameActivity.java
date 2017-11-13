@@ -1,12 +1,15 @@
 package com.example.briantomasco.profile_fill;
 
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 
@@ -67,24 +70,26 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     final String PET_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/pat.pl?";
     final String TRACK_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/track.pl?";
     private Marker self;
-    private LatLng current;
+    private static LatLng current;
     private boolean zoomedOut = true;
     private String char_name;
     private String pw;
     private int distancePref;
-    private float distanceBetween;
+    private double distanceBetween;
     private Button petButton;
-    private Button trackButton;
+    public static Button trackButton;
     private LinearLayout buttonLayout;
     private boolean tracking = false;
     private TextView bannerText;
     private ImageView bannerPic;
     private int selectedId;  // saves selected cat's ID for orientation change
-    private Marker selectedMarker;
+    private static Marker selectedMarker;
     private Bitmap grayCatIcon;
     private Bitmap greenCatIcon;
     private ArrayList<Marker> catMarkers = new ArrayList<>();
     SharedPreferences load;
+    ForegroundService thisService = null;
+    private boolean isBound = false;
 
 
 
@@ -209,7 +214,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     // when a cat is selected, change the banner appropriately
     protected void markerSelected(Marker marker){
-        Log.d("SELECTED", "Marker was selected");
         JSONObject cat = (JSONObject) marker.getTag();
         if (cat != null && marker != selectedMarker) {
             try {
@@ -278,6 +282,45 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    public void updateDistanceText() {
+
+        try {
+            if (selectedMarker != null) {
+                JSONObject cat = (JSONObject) selectedMarker.getTag();
+                // change text for the cat currently selected
+                float[] results = new float[1];
+                Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
+                if (results[0] > distancePref) {
+                    selectedMarker = null;
+                    selectedId = 0;
+                    changeBannerDefault();
+                    return;
+                }
+                bannerText.setText(cat.getString("name") + " is " + (int) results[0] + " meters away.");
+            }
+        }
+        catch (JSONException e) {
+            Toast.makeText(getApplicationContext(), "Error getting selected marker info", Toast.LENGTH_SHORT).show();
+            Log.d("SELECTED", e.getMessage());
+        }
+    }
+
+    public static float getDistance() {
+        try {
+            if (selectedMarker != null) {
+                JSONObject cat = (JSONObject) selectedMarker.getTag();
+                // change text for the cat currently selected
+                float[] results = new float[1];
+                Location.distanceBetween(current.latitude, current.longitude, cat.getDouble("lat"), cat.getDouble("lng"), results);
+                return results[0];
+            }
+        }
+        catch(JSONException e){
+            Log.d("SELECTED", e.getMessage());
+        }
+        return 0;
+    }
+
     // change banner back to default
     protected void changeBannerDefault() {
 
@@ -328,6 +371,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     //container method for finding the new current location
     protected void updateWithNewLocation(Location loc) {
+        updateDistanceText();
         if (loc != null) {
             LatLng loca = new LatLng(loc.getLatitude(),loc.getLongitude());
             current = loca;
@@ -351,12 +395,11 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     Log.d("CAT MARKER JSON ERROR", e.getMessage());
                 }
                 float diffDist = results[0];
-                distanceBetween = diffDist;
+                //distanceBetween = diffDist;
                 if ((int)diffDist > distancePref) marker.setVisible(false);
                 else marker.setVisible(true);
             }
         }
-
     }
 
     //taken from class notes in LiveLocationUpdate. Set where the camera focus is... to current location
@@ -374,7 +417,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     //set the options for finding the best provider. taken from aforementioned class notes
-    protected Criteria getCriteria() {
+    protected static Criteria getCriteria() {
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setPowerRequirement(Criteria.POWER_LOW);
@@ -442,6 +485,10 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             trackButton.setText("Track");
             trackButton.setBackgroundColor(Color.GREEN);
             trackButton.setTextColor(Color.WHITE);
+            Intent stopIntent = new Intent();
+            stopIntent.setClass(getApplicationContext(), ForegroundService.class);
+            unbindService(serviceConnection);
+            stopService(stopIntent);
         }
         else {
             tracking = true;
@@ -465,6 +512,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                             try {
                                 String status = response.getString("status");
                                 if (status.equals("OK")){
+
+                                    distanceBetween = response.getDouble("distance");
                                     Intent trackIntent = new Intent ();
                                     JSONObject mark = (JSONObject) selectedMarker.getTag();
                                     String name = mark.getString("name");
@@ -474,6 +523,9 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                     trackIntent.putExtra("pic", pic);
                                     trackIntent.setClass(getApplicationContext(), ForegroundService.class);
                                     startService(trackIntent);
+                                    Intent bindIntent = new Intent();
+                                    bindIntent.setClass(getApplicationContext(), ForegroundService.class);
+                                    bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
 
 
@@ -503,6 +555,21 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         }
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ForegroundService.MyBinder binder = (ForegroundService.MyBinder) service;
+            thisService = binder.getService();
+            isBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            thisService = null;
+            isBound = false;
+        }
+    };
 
     public void onCatPet(String catName){
 
@@ -573,9 +640,9 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     //finds the selected id and restores onConfiguration change
     @Override
     public void onRestoreInstanceState(Bundle inState){
-        super.onRestoreInstanceState(inState);
         selectedId = inState.getInt("selected");
-        tracking = inState.getBoolean("selected");
+        tracking = inState.getBoolean("tracking");
+        super.onRestoreInstanceState(inState);
     }
 
     //need to provide the following methods in order to implement LocationListener
@@ -596,4 +663,5 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public void onStatusChanged(String provider, int status, Bundle extras) {
         // Called when the provider status changes.
     }
+
 }
