@@ -93,6 +93,11 @@
             </intent-filter>
         </service>
 
+        <receiver
+            android:name=".StopServiceReceiver"
+            android:enabled="true"
+            android:process=":remote" />
+
     </application>
 
 </manifest>

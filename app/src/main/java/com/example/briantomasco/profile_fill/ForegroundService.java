@@ -2,11 +2,13 @@ package com.example.briantomasco.profile_fill;
 
 import android.*;
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Icon;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -18,6 +20,7 @@ import android.provider.SyncStateContract;
 import android.renderscript.RenderScript;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
@@ -39,10 +42,11 @@ public class ForegroundService extends Service implements LocationListener {
     String name;
     String pic;
     double distance;
+    final int STOP_REQUEST_CODE = 333;
 
     //used code example from http://www.tutorialsface.com/2015/09/simple-android-foreground-service-example/
     public boolean running = false;
-    private IBinder myBinder = new MyBinder();
+   // private IBinder myBinder = new MyBinder();
 
     @Override
     public void onCreate() {
@@ -50,6 +54,13 @@ public class ForegroundService extends Service implements LocationListener {
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent.getAction() != null && intent.getAction().equals("STOP")){
+            Log.d("SERVICE", "tried to stop");
+            Intent changeText = new Intent("CHANGE");
+            LocalBroadcastManager.getInstance(this).sendBroadcast(changeText);
+            stopSelf();
+        }
+
         Log.i("SERVICE", "Received Start Foreground Intent ");
         name = intent.getStringExtra("name");
         pic = intent.getStringExtra("pic");
@@ -81,11 +92,20 @@ public class ForegroundService extends Service implements LocationListener {
     private void showNotification() {
 
         String id = "my_channel_1";
+
+        //used code example from https://stackoverflow.com/questions/41359337/android-notification-pendingintent-to-stop-service
+        Intent intent = new Intent(this, ForegroundService.class);
+        intent.setAction("STOP");
+        PendingIntent pendingIntent = PendingIntent.getService(this, STOP_REQUEST_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Icon stop = Icon.createWithResource(this, R.drawable.stoppy);
+        Notification.Action action = new Notification.Action.Builder(stop,
+                "Stop tracking", pendingIntent).build();
         Notification.Builder builder = new Notification.Builder(this)
                 .setContentTitle("Tracking " + name)
                 .setContentText("You are " + (int)distance + " meters away.")
                 .setSmallIcon(R.drawable.banner)
-                .setOngoing(true);
+                .setOngoing(true)
+                .addAction(action);
         Notification notification = builder.build();
         startForeground(1, notification);
 
@@ -93,16 +113,20 @@ public class ForegroundService extends Service implements LocationListener {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("SERVICE", "onBind done");
-        return myBinder;
+        return null;
 
     }
 
-    public class MyBinder extends Binder {
+    /*public class MyBinder extends Binder {
         ForegroundService getService() {
             return ForegroundService.this;
         }
     }
+
+    public IBinder getMyBinder () {
+        return myBinder;
+    }
+    */
 
     //need to provide the following methods in order to implement LocationListener
     @Override
@@ -119,11 +143,18 @@ public class ForegroundService extends Service implements LocationListener {
         Log.d("CHANGE", "Location changed");
         distance = (int)GameActivity.getDistance();
         String id = "my_channel_1";
+        Intent intent = new Intent(this, ForegroundService.class);
+        intent.setAction("STOP");
+        PendingIntent pendingIntent = PendingIntent.getService(this, STOP_REQUEST_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        Icon stop = Icon.createWithResource(this, R.drawable.stoppy);
+        Notification.Action action = new Notification.Action.Builder(stop,
+                "Stop tracking", pendingIntent).build();
         Notification.Builder builder = new Notification.Builder(this)
                 .setContentTitle("Tracking " + name)
                 .setContentText("You are " + (int)distance + " meters away.")
                 .setSmallIcon(R.drawable.banner)
-                .setOngoing(true);
+                .setOngoing(true)
+                .addAction(action);
         Notification notification = builder.build();
         startForeground(2, notification);
 

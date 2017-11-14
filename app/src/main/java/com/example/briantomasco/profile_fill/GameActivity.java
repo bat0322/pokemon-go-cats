@@ -1,7 +1,11 @@
 package com.example.briantomasco.profile_fill;
 
+import android.app.Notification;
+import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -39,6 +43,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -79,7 +84,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private Button petButton;
     public static Button trackButton;
     private LinearLayout buttonLayout;
-    private boolean tracking = false;
+    public boolean tracking = false;
     private TextView bannerText;
     private ImageView bannerPic;
     private int selectedId;  // saves selected cat's ID for orientation change
@@ -90,6 +95,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     SharedPreferences load;
     ForegroundService thisService = null;
     private boolean isBound = false;
+    //private IBinder myBinder;
 
 
 
@@ -97,6 +103,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+        broadcastReceiver();
 
         load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
 
@@ -121,7 +128,14 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+   /* if (tracking) {
+
+        myBinder = thisService.getMyBinder();
     }
+    */
+
+    }
+
 
     //callback for when the Google Map is ready to be interacted with
     @Override
@@ -382,7 +396,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
             self = map.addMarker(new MarkerOptions().position(loca).title("Your Location"));
             if (selectedMarker!=null) markerSelected(selectedMarker);
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(loca, 18f));
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(loca, 16f));
 
             //loop through the cats with each update and set visibility according to distancePref as above
             for (Marker marker : catMarkers){
@@ -411,7 +425,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             // Zoom in, animating the camera.
             map.animateCamera(CameraUpdateFactory.zoomIn());
             // Zoom out to zoom level 10, animating with a duration of 1 second.
-            map.animateCamera(CameraUpdateFactory.zoomTo(18f), 1000, null);
+            map.animateCamera(CameraUpdateFactory.zoomTo(16f), 1000, null);
             zoomedOut = false;
         }
     }
@@ -482,16 +496,18 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public void onTrackClick(View v) {
         if (tracking) {
             tracking = false;
+            Log.d("TRACK", "stopping");
             trackButton.setText("Track");
             trackButton.setBackgroundColor(Color.GREEN);
             trackButton.setTextColor(Color.WHITE);
             Intent stopIntent = new Intent();
             stopIntent.setClass(getApplicationContext(), ForegroundService.class);
-            unbindService(serviceConnection);
+            //unbindService(serviceConnection);
             stopService(stopIntent);
         }
         else {
             tracking = true;
+            Log.d("TRACK", "tracking");
             trackButton.setText("Stop");
             trackButton.setBackgroundColor(Color.RED);
             trackButton.setTextColor(Color.WHITE);
@@ -523,9 +539,10 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                     trackIntent.putExtra("pic", pic);
                                     trackIntent.setClass(getApplicationContext(), ForegroundService.class);
                                     startService(trackIntent);
-                                    Intent bindIntent = new Intent();
+                                    /*Intent bindIntent = new Intent();
                                     bindIntent.setClass(getApplicationContext(), ForegroundService.class);
                                     bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+                                    */
 
 
 
@@ -556,7 +573,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
 
-    private ServiceConnection serviceConnection = new ServiceConnection() {
+  /*  private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             ForegroundService.MyBinder binder = (ForegroundService.MyBinder) service;
@@ -570,6 +587,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             isBound = false;
         }
     };
+    */
 
     public void onCatPet(String catName){
 
@@ -634,6 +652,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public void onSaveInstanceState(Bundle outState){
         outState.putInt("selected", selectedId);
         outState.putBoolean("tracking", tracking);
+        //outState.putBinder("connection", myBinder);
         super.onSaveInstanceState(outState);
     }
 
@@ -642,6 +661,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public void onRestoreInstanceState(Bundle inState){
         selectedId = inState.getInt("selected");
         tracking = inState.getBoolean("tracking");
+        //myBinder = inState.getBinder("connection");
         super.onRestoreInstanceState(inState);
     }
 
@@ -662,6 +682,28 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         // Called when the provider status changes.
+    }
+
+    @Override
+    public void onDestroy() {
+        //unbindService(serviceConnection);
+        super.onDestroy();
+
+    }
+
+    public void broadcastReceiver() {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        if (intent.getAction().equals("CHANGE")) {
+                            trackButton.setText("Track");
+                            trackButton.setBackgroundColor(Color.GREEN);
+                            trackButton.setTextColor(Color.WHITE);
+                        }
+                    }
+                }, new IntentFilter("CHANGE")
+        );
     }
 
 }
