@@ -62,6 +62,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+import static com.example.briantomasco.profile_fill.CreateAcctActivity.SHARED_PREF;
+
 /**
  * Created by zacharyjohnson on 10/24/17.
  */
@@ -87,6 +89,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public boolean tracking = false;
     private TextView bannerText;
     private ImageView bannerPic;
+    private boolean mapStartup;
     private int selectedId;  // saves selected cat's ID for orientation change
     private static Marker selectedMarker;
     private Bitmap grayCatIcon;
@@ -105,6 +108,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_game);
         broadcastReceiver();
 
+        mapStartup = true;
+
         load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
 
         if (load.contains("User Name")) {
@@ -116,6 +121,16 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         if (load.contains("Distance")){
             distancePref = load.getInt("Distance",250);
         }
+
+        if (load.contains("Tracking")) {
+            tracking = load.getBoolean("Tracking", false);
+        }
+
+        if (load.contains("SelectedId")) {
+            selectedId = load.getInt("SelectedId", 0);
+        }
+
+        if (tracking) Log.d("TRACKING", Integer.toString(selectedId));
 
         buttonLayout = findViewById(R.id.button_layout);
         petButton = findViewById(R.id.pet_button);
@@ -173,7 +188,9 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
                                    //only make the markers visible if they are within the preselected range
                                    if ((int)diffDist > distancePref) marker.setVisible(false);
-                                   if (cat.getInt("catId") == selectedId) markerSelected(marker);
+                                   if (cat.getInt("catId") == selectedId){
+                                       markerSelected(marker);
+                                   }
                                    map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                                        @Override
                                        public boolean onMarkerClick(Marker marker) {
@@ -184,6 +201,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                    });
                                }
                            }
+                           mapStartup = false;
 
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(),
@@ -202,7 +220,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 }
 
         );
-
+        catlist.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(catlist);
 
         // choose map type and find the current location
@@ -219,6 +237,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     if (selectedMarker != null) {
                         selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(grayCatIcon));
                         selectedMarker = null;
+                        selectedId = 0;
                     }
                     changeBannerDefault();
                 }
@@ -228,9 +247,28 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     // when a cat is selected, change the banner appropriately
     protected void markerSelected(Marker marker){
+
+
         JSONObject cat = (JSONObject) marker.getTag();
-        if (cat != null && marker != selectedMarker) {
+        if ((cat != null && marker != selectedMarker)) {
             try {
+                if (tracking && !mapStartup) {
+                    SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+                    final SharedPreferences.Editor editor = save.edit();
+                    tracking = false;
+                    editor.putBoolean("Tracking", tracking);
+                    editor.commit();
+                    Log.d("TRACK", "stopping service");
+                    trackButton.setText("Track");
+                    trackButton.setBackgroundColor(Color.GREEN);
+                    trackButton.setTextColor(Color.WHITE);
+                    Intent stopIntent = new Intent();
+                    stopIntent.setClass(getApplicationContext(), ForegroundService.class);
+                    stopService(stopIntent);
+                    Toast.makeText(getApplicationContext(), "Stopped service because you clicked on another cat", Toast.LENGTH_SHORT).show();
+
+                }
+
                 // set old selected icon to gray
                 if (selectedMarker != null) selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(grayCatIcon));
 
@@ -269,9 +307,16 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // make buttons functional
                 trackButton.setClickable(true);
-                trackButton.setText("Track");
-                trackButton.setBackgroundColor(Color.GREEN);
-                trackButton.setTextColor(Color.WHITE);
+                if (!tracking) {
+                    trackButton.setText("Track");
+                    trackButton.setBackgroundColor(Color.GREEN);
+                    trackButton.setTextColor(Color.WHITE);
+                }
+                else {
+                    trackButton.setText("Stop");
+                    trackButton.setBackgroundColor(Color.RED);
+                    trackButton.setTextColor(Color.WHITE);
+                }
 
                 // adjust pet button based on whether cat has been petted before
                 if (cat.getBoolean("petted")) {
@@ -496,6 +541,10 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     public void onTrackClick(View v) {
         if (tracking) {
             tracking = false;
+            SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+            final SharedPreferences.Editor editor = save.edit();
+            editor.putBoolean("Tracking", tracking);
+            editor.commit();
             Log.d("TRACK", "stopping");
             trackButton.setText("Track");
             trackButton.setBackgroundColor(Color.GREEN);
@@ -507,6 +556,10 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
         else {
             tracking = true;
+            SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+            final SharedPreferences.Editor editor = save.edit();
+            editor.putBoolean("Tracking", tracking);
+            editor.commit();
             Log.d("TRACK", "tracking");
             trackButton.setText("Stop");
             trackButton.setBackgroundColor(Color.RED);
@@ -686,8 +739,17 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onDestroy() {
-        //unbindService(serviceConnection);
         super.onDestroy();
+        SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+        final SharedPreferences.Editor editor = save.edit();
+        if (tracking && selectedId != 0) {
+            editor.putInt("SelectedId", selectedId);
+            editor.commit();
+        }
+        else {
+            editor.putInt("SelectedId", 0);
+            editor.commit();
+        }
 
     }
 

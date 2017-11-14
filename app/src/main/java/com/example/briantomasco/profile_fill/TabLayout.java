@@ -83,6 +83,18 @@ public class TabLayout extends AppCompatActivity {
 
         load = getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
 
+        if (load.contains("Tracking")) {
+            // if so, go directly to tab layout
+            Boolean tracking = load.getBoolean("Tracking", false);
+            Log.d("TRACK", tracking.toString());
+            if (tracking){
+                Log.d("GAME", "I am getting to the game");
+                Intent goToGame = new Intent("GAME");
+                startActivity(goToGame);
+                finish();
+            }
+        }
+
         if (load.contains("User Name")) {
             char_name = load.getString("User Name", "");
         }

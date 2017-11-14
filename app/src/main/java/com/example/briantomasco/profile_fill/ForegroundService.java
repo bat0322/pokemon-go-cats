@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Icon;
@@ -33,6 +34,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
+import static com.example.briantomasco.profile_fill.CreateAcctActivity.SHARED_PREF;
+
 /**
  * Created by zacharyjohnson on 11/10/17.
  */
@@ -59,6 +62,10 @@ public class ForegroundService extends Service implements LocationListener {
             Intent changeText = new Intent("CHANGE");
             LocalBroadcastManager.getInstance(this).sendBroadcast(changeText);
             stopSelf();
+            SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+            final SharedPreferences.Editor editor = save.edit();
+            editor.putBoolean("Tracking", false);
+            editor.commit();
         }
 
         Log.i("SERVICE", "Received Start Foreground Intent ");
@@ -103,7 +110,8 @@ public class ForegroundService extends Service implements LocationListener {
         Notification.Builder builder = new Notification.Builder(this)
                 .setContentTitle("Tracking " + name)
                 .setContentText("You are " + (int)distance + " meters away.")
-                .setSmallIcon(R.drawable.banner)
+                .setSmallIcon(R.drawable.stoppy)
+                .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .addAction(action);
         Notification notification = builder.build();
@@ -140,7 +148,6 @@ public class ForegroundService extends Service implements LocationListener {
     @Override
     public void onLocationChanged(Location location) {
         // Called whenever the location is changed.
-        Log.d("CHANGE", "Location changed");
         distance = (int)GameActivity.getDistance();
         String id = "my_channel_1";
         Intent intent = new Intent(this, ForegroundService.class);
@@ -152,8 +159,9 @@ public class ForegroundService extends Service implements LocationListener {
         Notification.Builder builder = new Notification.Builder(this)
                 .setContentTitle("Tracking " + name)
                 .setContentText("You are " + (int)distance + " meters away.")
-                .setSmallIcon(R.drawable.banner)
+                .setSmallIcon(R.drawable.stoppy)
                 .setOngoing(true)
+                .setContentIntent(pendingIntent)
                 .addAction(action);
         Notification notification = builder.build();
         startForeground(2, notification);
@@ -162,6 +170,15 @@ public class ForegroundService extends Service implements LocationListener {
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
         // Called when the provider status changes.
+    }
+
+    @Override
+    public void onDestroy() {
+        SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
+        final SharedPreferences.Editor editor = save.edit();
+        editor.putBoolean("Tracking", false);
+        editor.commit();
+        super.onDestroy();
     }
 
 }
