@@ -29,28 +29,35 @@ public class History extends Fragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        // create a linear layout to show the cat list
         LinearLayout lin = getView().findViewById(R.id.lin);
 
+        // get the list of cats
         JSONArray cats = TabLayout.getCats();
-        for (int i = 0; i < cats.length(); i++) {
-            try {
-                JSONObject obj = (JSONObject)cats.get(i);
-                String picUrl = obj.getString("picUrl");
-                String name = obj.getString("name");
-                Double lat = obj.getDouble("lat");
-                Double lng = obj.getDouble("lng");
-                Boolean petted = obj.getBoolean("petted");
-                HistoryLayoutHelper helper = new HistoryLayoutHelper(getContext(), picUrl, name, lat, lng, petted);
-                LinearLayout layout = helper.createLayout();
-                lin.addView(layout);
 
+        // assuming list is there, get information and make a linear layout with each one
+        if (cats != null) {
+            for (int i = 0; i < cats.length(); i++) {
+                try {
+                    JSONObject obj = (JSONObject) cats.get(i);
+                    String picUrl = obj.getString("picUrl");
+                    String name = obj.getString("name");
+                    Double lat = obj.getDouble("lat");
+                    Double lng = obj.getDouble("lng");
+                    Boolean petted = obj.getBoolean("petted");
 
+                    // use layout helper to make panel for each cat
+                    HistoryLayoutHelper helper = new HistoryLayoutHelper(getContext(), picUrl, name, lat, lng, petted);
+                    LinearLayout layout = helper.createLayout();
 
-            }
-            catch (Exception e) {
-                Toast.makeText(getContext(),
-                        e.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                    // add to master linear layout
+                    lin.addView(layout);
+
+                } catch (Exception e) {
+                    Toast.makeText(getContext(),
+                            e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }

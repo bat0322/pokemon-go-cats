@@ -15,9 +15,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -175,12 +178,20 @@ public class EditProfileActivity extends AppCompatActivity {
                         },
                         new Response.ErrorListener() {
                             @Override
-                            public void onErrorResponse(VolleyError e) {
-                                Toast.makeText(getApplicationContext(), "Error changing password", Toast.LENGTH_SHORT).show();
-                                Log.d("CHANGE PASS ERROR", e.getMessage());
+                            public void onErrorResponse(VolleyError error) {
+                                if (error.networkResponse == null) {
+                                    if (error.getClass().equals(TimeoutError.class)) {
+                                        Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                if (error.getClass().equals(ServerError.class)) {
+                                    Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                                }
+
                             }
                         }
                 );
+                changePass.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
                 queue.add(changePass);
             }
         }
@@ -208,11 +219,20 @@ public class EditProfileActivity extends AppCompatActivity {
                     },
                     new Response.ErrorListener() {
                         @Override
-                        public void onErrorResponse(VolleyError e) {
-                            Log.d("ERROR GETTING PROF", e.getMessage());
+                        public void onErrorResponse(VolleyError error) {
+                            if (error.networkResponse == null) {
+                                if (error.getClass().equals(TimeoutError.class)) {
+                                    Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            if (error.getClass().equals(ServerError.class)) {
+                                Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                            }
+
                         }
                     }
             );
+            getProfile.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             queue.add(getProfile);
             url = PROFILE_SERVER_ADDRESS;
             JsonObjectRequest saveProfile = new JsonObjectRequest(
@@ -242,12 +262,20 @@ public class EditProfileActivity extends AppCompatActivity {
                     },
                     new Response.ErrorListener() {
                         @Override
-                        public void onErrorResponse(VolleyError e) {
-                            Toast.makeText(getApplicationContext(), "Error saving changes", Toast.LENGTH_LONG).show();
-                            Log.d("ERROR SAVING NEW PROF", e.getMessage());
+                        public void onErrorResponse(VolleyError error) {
+                            if (error.networkResponse == null) {
+                                if (error.getClass().equals(TimeoutError.class)) {
+                                    Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            if (error.getClass().equals(ServerError.class)) {
+                                Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                            }
+
                         }
                     }
             );
+            saveProfile.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
             queue.add(saveProfile);
         }
         //check to make sure that password and password re-entry match

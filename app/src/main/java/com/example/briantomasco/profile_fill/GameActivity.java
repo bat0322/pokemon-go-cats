@@ -21,6 +21,8 @@ import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -73,6 +75,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap map;
     final int PERMISSIONS_REQUEST_FINE_LOCATION = 1;
     final int CAMERA_OVERLAY_CODE = 2;
+    final int PERMISSIONS_REQUEST_CAMERA = 3;
     final String CATLIST_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/catlist.pl?";
     final String PET_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/pat.pl?";
     final String TRACK_SERVER_ADDRESS = "http://cs65.cs.dartmouth.edu/track.pl?";
@@ -122,10 +125,12 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             distancePref = load.getInt("Distance",250);
         }
 
+        //record the tracking boolean to indicate whether the service is running.
         if (load.contains("Tracking")) {
             tracking = load.getBoolean("Tracking", false);
         }
 
+        //this helps you pop up the correct marker when you restart the app
         if (load.contains("SelectedId")) {
             selectedId = load.getInt("SelectedId", 0);
         }
@@ -143,11 +148,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-   /* if (tracking) {
-
-        myBinder = thisService.getMyBinder();
-    }
-    */
 
     }
 
@@ -213,9 +213,15 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(),
-                                "Error: " + error.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
                 }
 
@@ -238,6 +244,10 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                         selectedMarker.setIcon(BitmapDescriptorFactory.fromBitmap(grayCatIcon));
                         selectedMarker = null;
                         selectedId = 0;
+                        Intent stopIntent = new Intent();
+                        stopIntent.setClass(getApplicationContext(), ForegroundService.class);
+                        stopService(stopIntent);
+                        Toast.makeText(getApplicationContext(), "Stopped service because you clicked off the cat", Toast.LENGTH_SHORT).show();
                     }
                     changeBannerDefault();
                 }
@@ -341,6 +351,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //update the banner text saying how far away you are from the cat
     public void updateDistanceText() {
 
         try {
@@ -364,6 +375,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //return the distance between you and the cat
     public static float getDistance() {
         try {
             if (selectedMarker != null) {
@@ -514,31 +526,68 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
                 }
             }
+            case PERMISSIONS_REQUEST_CAMERA: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // if it's granted, start the camera overlay activity
+                    JSONObject currentCat = (JSONObject) selectedMarker.getTag();
+                    try {
+                        Config.catName = currentCat.getString("name");
+                        Config.catLatitude = currentCat.getDouble("lat");
+                        Config.catLongitude = currentCat.getDouble("lng");
+                        Config.locDistanceRange = 30;
+                        Config.useLocationFilter = false;
+                        Config.onCatPetListener = this;
+                        Intent i = new Intent(this, CameraViewActivity.class);
+                        startActivityForResult(i, CAMERA_OVERLAY_CODE);
+
+                    } catch (Exception e) {
+                        Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                return;
+            }
+
         }
     }
 
-    // when pet is clicked
+    // when pet is clicked start the camera overlay activity
     public void onPetClick(View v) {
+        // make sure camera permission has been given
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
 
-        JSONObject currentCat = (JSONObject) selectedMarker.getTag();
+            // if not, request it, tell user it is needed
+            Toast.makeText(this, "Camera permission needed to proceed", Toast.LENGTH_SHORT).show();
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA}, PERMISSIONS_REQUEST_CAMERA);
 
-        try {
-            Config.catName = currentCat.getString("name");
-            Config.catLatitude = currentCat.getDouble("lat");
-            Config.catLongitude = currentCat.getDouble("lng");
-            Config.locDistanceRange = 30;
-            Config.useLocationFilter = false;
-            Config.onCatPetListener = this;
-            Intent i = new Intent(this, CameraViewActivity.class);
-            startActivityForResult(i, CAMERA_OVERLAY_CODE);
+        }
+        // granted, start the activity
+        else {
+            JSONObject currentCat = (JSONObject) selectedMarker.getTag();
+            try {
+                Config.catName = currentCat.getString("name");
+                Config.catLatitude = currentCat.getDouble("lat");
+                Config.catLongitude = currentCat.getDouble("lng");
+                Config.locDistanceRange = 30;
+                Config.useLocationFilter = false;
+                Config.onCatPetListener = this;
+                Intent i = new Intent(this, CameraViewActivity.class);
+                startActivityForResult(i, CAMERA_OVERLAY_CODE);
 
-        } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     //when the Track button is clicked
     public void onTrackClick(View v) {
+
+        // if the service is running, stop it and change button to track
         if (tracking) {
             tracking = false;
             SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
@@ -554,6 +603,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             //unbindService(serviceConnection);
             stopService(stopIntent);
         }
+        // otherwise start service and change button to stop
         else {
             tracking = true;
             SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
@@ -569,7 +619,7 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
             String url = TRACK_SERVER_ADDRESS + "name=" + char_name + "&password=" + pw;
             url += "&catid=" + selectedId + "&lat=" + current.latitude + "&lng=" + current.longitude;
 
-            //send a track request
+            //send a track request and start service
             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
             JsonObjectRequest jsonObjReq = new JsonObjectRequest(
                     Request.Method.GET,
@@ -592,15 +642,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                                     trackIntent.putExtra("pic", pic);
                                     trackIntent.setClass(getApplicationContext(), ForegroundService.class);
                                     startService(trackIntent);
-                                    /*Intent bindIntent = new Intent();
-                                    bindIntent.setClass(getApplicationContext(), ForegroundService.class);
-                                    bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-                                    */
-
-
-
-
-
                                 }
                                 else {
                                     String reason = response.getString("reason");
@@ -616,6 +657,14 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
+                            if (error.networkResponse == null) {
+                                if (error.getClass().equals(TimeoutError.class)) {
+                                    Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                            if (error.getClass().equals(ServerError.class)) {
+                                Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                            }
 
                         }
                     }
@@ -625,22 +674,6 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         }
-
-  /*  private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            ForegroundService.MyBinder binder = (ForegroundService.MyBinder) service;
-            thisService = binder.getService();
-            isBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            thisService = null;
-            isBound = false;
-        }
-    };
-    */
 
     public void onCatPet(String catName){
 
@@ -659,6 +692,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                     public void onResponse(JSONObject response) {
                         try {
                             String status = response.getString("status");
+
+                            // if the pet is successful, change UI and local data and send to success activity
                             if (status.equals("OK")){
                                 JSONObject cat = (JSONObject) selectedMarker.getTag();
                                 cat.put("petted", "true");
@@ -689,6 +724,14 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
 
                     }
                 }
@@ -740,6 +783,8 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        // save the current selected id if tracking service is running
         SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
         final SharedPreferences.Editor editor = save.edit();
         if (tracking && selectedId != 0) {
@@ -753,11 +798,14 @@ public class GameActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    // listen for tracking service to stop from notification bar
     public void broadcastReceiver() {
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
+
+                        // if the service has stopped, change UI accordingly
                         if (intent.getAction().equals("CHANGE")) {
                             trackButton.setText("Track");
                             trackButton.setBackgroundColor(Color.GREEN);

@@ -16,6 +16,7 @@ import com.squareup.picasso.Picasso;
  * Created by zacharyjohnson on 11/5/17.
  */
 
+//class to help create a layout for each cat of the history page
 public class HistoryLayoutHelper {
 
     Context context;
@@ -26,6 +27,7 @@ public class HistoryLayoutHelper {
     boolean petted;
 
 
+    // get the attributes for the cat
     public HistoryLayoutHelper(Context context, String picUrl, String name, double lat, double lng, boolean petted) {
         this.picUrl = picUrl;
         this.name = name;
@@ -36,12 +38,14 @@ public class HistoryLayoutHelper {
     }
 
     public LinearLayout createLayout() {
+        //create a layout with appropriate properties
         LinearLayout layout = new LinearLayout(context);
         layout.setOrientation(LinearLayout.HORIZONTAL);
         layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         layout.setWeightSum(5);
         layout.setPadding(10, 10, 10, 10);
 
+        //create an image view with the pic of the cat to add to the layout
         RelativeLayout imageEnclose = new RelativeLayout(context);
         imageEnclose.setLayoutParams(new LinearLayout.LayoutParams(0, RelativeLayout.LayoutParams.MATCH_PARENT, 1.0f));
         imageEnclose.setHorizontalGravity(RelativeLayout.CENTER_HORIZONTAL);
@@ -53,6 +57,8 @@ public class HistoryLayoutHelper {
         imageEnclose.addView(image);
         layout.addView(imageEnclose);
 
+
+        //get the textual info to add to the layout
         LinearLayout catInfo = new LinearLayout(context);
         catInfo.setOrientation(LinearLayout.VERTICAL);
         catInfo.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 3.0f));
@@ -63,6 +69,7 @@ public class HistoryLayoutHelper {
 
         layout.addView(catInfo);
 
+        //get the button info to add to the layout
         Button petty = new Button(context);
         petty.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
         petty.setTextSize(16.0f);
@@ -86,6 +93,7 @@ public class HistoryLayoutHelper {
         return layout;
     }
 
+    //combine all the text info into one thing to be added to the layout
     protected TextView createInfoTextView(String type, String info) {
         TextView infoView = new TextView(context);
         infoView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));

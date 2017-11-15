@@ -40,6 +40,7 @@ public class Preferences extends Fragment {
     private Switch vibrate;
     private Switch pub;
     private EditText distance;
+    private EditText notiDistance;
     SharedPreferences load;
 
     @Override
@@ -61,6 +62,7 @@ public class Preferences extends Fragment {
         vibrate = view.findViewById(R.id.vibrate_switch);
         pub = view.findViewById(R.id.public_switch);
         distance = view.findViewById(R.id.distance_pref);
+        notiDistance = view.findViewById(R.id.distance_noti_pref);
 
         // load the shared preferences data and put them in the appropriate fields
         load = getActivity().getSharedPreferences(CreateAcctActivity.SHARED_PREF, 0);
@@ -93,6 +95,7 @@ public class Preferences extends Fragment {
         if (load.contains("Vibrate")) vibrate.setChecked(load.getBoolean("Vibrate", false));
         if (load.contains("Public")) pub.setChecked(load.getBoolean("Public", false));
         if (load.contains("Distance")) distance.setText(Integer.toString(load.getInt("Distance", 250)));
+        if (load.contains("Notification distance")) notiDistance.setText(Integer.toString(load.getInt("Notification distance", 50)));
 
 
         distance.addTextChangedListener(new TextWatcher() {
@@ -116,8 +119,27 @@ public class Preferences extends Fragment {
             }
 
         });
+
+        // same thing as above but for notification distance
+        notiDistance.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void afterTextChanged(Editable s) {
+
+                if (!s.toString().equals("")) {
+                    SharedPreferences.Editor editor = load.edit();
+                    editor.putInt("Notification distance", Integer.parseInt(s.toString()));
+                    editor.commit();
+                }
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+        });
     }
-
-
-
 }

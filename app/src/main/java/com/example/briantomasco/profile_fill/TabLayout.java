@@ -14,12 +14,16 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -121,6 +125,8 @@ public class TabLayout extends AppCompatActivity {
                             final SharedPreferences.Editor editor = load.edit();
                             editor.putInt("Cat List Length", length);
                             editor.commit();
+                            TextView splashBanner = findViewById(R.id.status);
+                            splashBanner.setText("You have " + length + " cats!");
 
                         } catch (Exception e) {
                             Toast.makeText(getApplicationContext(),
@@ -132,14 +138,20 @@ public class TabLayout extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(),
-                                "Error: " + error.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
                 }
 
         );
-
+        catlist.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(catlist);
     }
 
@@ -235,10 +247,19 @@ public class TabLayout extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
 
                     }
                 }
         );
+        jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(jsonObjReq);
         getCatList();
     }
@@ -275,6 +296,7 @@ public class TabLayout extends AppCompatActivity {
                                     profile.put("vibrate", load.getBoolean("Vibrate", false));
                                     profile.put("public", load.getBoolean("Public", false));
                                     profile.put("distance", load.getInt("Distance", 250));
+                                    profile.put("noti_distance", load.getInt("Notification distance", 50));
                                 }
                                 catch (JSONException e) {
                                     Log.d("JSON EDIT ERROR", e.getMessage());
@@ -304,12 +326,20 @@ public class TabLayout extends AppCompatActivity {
                                         },
                                         new Response.ErrorListener() {
                                             @Override
-                                            public void onErrorResponse(VolleyError e) {
-                                                Toast.makeText(getApplicationContext(), "Error saving changes", Toast.LENGTH_LONG).show();
-                                                Log.d("ERROR SAVING NEW PROF", e.getMessage());
+                                            public void onErrorResponse(VolleyError error) {
+                                                if (error.networkResponse == null) {
+                                                    if (error.getClass().equals(TimeoutError.class)) {
+                                                        Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                }
+                                                if (error.getClass().equals(ServerError.class)) {
+                                                    Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                                                }
+
                                             }
                                         }
                                 );
+                                saveProfile.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
                                 queue.add(saveProfile);
                             }
                         } catch (Exception e) {
@@ -321,9 +351,15 @@ public class TabLayout extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(),
-                                "Could not get profile: " + error.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
                 }
         ) {
@@ -335,6 +371,7 @@ public class TabLayout extends AppCompatActivity {
                 return params;
             }
         };
+        jsObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         //add request to Volley queue for execution
         queue.add(jsObjReq);
     }

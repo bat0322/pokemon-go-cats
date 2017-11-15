@@ -14,9 +14,12 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -90,6 +93,8 @@ public class SignInActivity extends AppCompatActivity {
                                         response.get("error").toString(),
                                         Toast.LENGTH_SHORT).show();
                             } else {
+
+                                // get info and settings tied to account
                                 String char_name = response.getString("name");
                                 String pass = response.getString("password");
                                 String full_name = response.getString("full_name");
@@ -97,6 +102,7 @@ public class SignInActivity extends AppCompatActivity {
                                 boolean vibrate = response.getBoolean("vibrate");
                                 boolean pub = response.getBoolean("public");
                                 int distance = response.getInt("distance");
+                                int notiDistance = response.getInt("noti_distance");
 
                                 SharedPreferences save = getSharedPreferences(SHARED_PREF, 0);
                                 final SharedPreferences.Editor editor = save.edit();
@@ -119,6 +125,7 @@ public class SignInActivity extends AppCompatActivity {
                                 editor.putBoolean("Vibrate", vibrate);
                                 editor.putBoolean("Public", pub);
                                 editor.putInt("Distance", distance);
+                                editor.putInt("Notification distance", notiDistance);
 
                                 editor.commit();
 
@@ -134,9 +141,15 @@ public class SignInActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(getApplicationContext(),
-                                "Could not sign in, error connecting to server: " + error.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
+
                     }
                 }
         ) {
@@ -148,6 +161,7 @@ public class SignInActivity extends AppCompatActivity {
                 return params;
             }
         };
+        jsObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         //add request to Volley queue for execution
         queue.add(jsObjReq);
     }

@@ -34,6 +34,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.soundcloud.android.crop.Crop;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -310,9 +313,15 @@ public class CreateAcctActivity extends AppCompatActivity {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(getApplicationContext(),
-                                        "Could not find availability, error connecting to server: " + error.getMessage(),
-                                        Toast.LENGTH_SHORT).show();
+                                if (error.networkResponse == null) {
+                                    if (error.getClass().equals(TimeoutError.class)) {
+                                        Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                if (error.getClass().equals(ServerError.class)) {
+                                    Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                                }
+
                             }
                         }
                     ) {
@@ -324,6 +333,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                             return params;
                         }
                     };
+                    jsObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
                     //add request to Volley queue for execution
                     queue.add(jsObjReq);
                 }
@@ -567,10 +577,14 @@ public class CreateAcctActivity extends AppCompatActivity {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.d("CHECK", error.getMessage());
-                        Toast.makeText(getApplicationContext(),
-                                "Could not find availability, error connecting to server: " + error.getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        if (error.networkResponse == null) {
+                            if (error.getClass().equals(TimeoutError.class)) {
+                                Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        if (error.getClass().equals(ServerError.class)) {
+                            Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                        }
                         avail = false;
                     }
                 }
@@ -583,6 +597,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                 return params;
             }
         };
+        jsObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         // add request to Volley queue for execution
         queue.add(jsObjReq);
     }
@@ -670,6 +685,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                 profile.put("vibrate", false);
                 profile.put("public", false);
                 profile.put("distance", 250);
+                profile.put("noti_distance", 50);
 
 
                 // will not work for signing in on different devices, will handle in later lab
@@ -713,10 +729,15 @@ public class CreateAcctActivity extends AppCompatActivity {
                         new Response.ErrorListener() {
                             @Override
                             public void onErrorResponse(VolleyError error) {
-                                Toast.makeText(getApplicationContext(),
-                                        "Error while saving " + error.getMessage(),
-                                        Toast.LENGTH_SHORT).show();
-                                Log.d("SAVE ERROR", error.toString());
+                                if (error.networkResponse == null) {
+                                    if (error.getClass().equals(TimeoutError.class)) {
+                                        Toast.makeText(getApplicationContext(), "Timeout error!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                                if (error.getClass().equals(ServerError.class)) {
+                                    Toast.makeText(getApplicationContext(), "Server error. Please try again later.", Toast.LENGTH_SHORT).show();
+                                }
+
                             }
                         }
                 ) {
@@ -728,6 +749,7 @@ public class CreateAcctActivity extends AppCompatActivity {
                         return params;
                     }
                 };
+                jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(3000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
                 // add post request to Volley queue to be executed
                 queue.add(jsonObjReq);
             }

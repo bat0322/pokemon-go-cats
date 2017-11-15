@@ -42,7 +42,7 @@ public class Play extends Fragment {
         if (load.contains("Cat List Length")) {
             int length = load.getInt("Cat List Length", 0);
             status.setText("You have " + length + " cats!");
-            Log.d("LOAD", "Length exists");
+            Log.d("LOAD", "Length exists. Length was " + length);
         }
         else Log.d("LOAD", "No length");
 
